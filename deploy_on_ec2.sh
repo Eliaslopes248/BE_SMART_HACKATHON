@@ -142,19 +142,42 @@ fi
 mkdir -p "$APP_DIR/logs"
 
 # Step 11: Setup PM2 to start on boot (first time only)
-if ! pm2 startup | grep -q "already setup"; then
-    echo "Step 11: Setting up PM2 startup..."
-    pm2 startup systemd -u ubuntu --hp /home/ubuntu
+echo "Step 11: Setting up PM2 startup..."
+if pm2 startup | grep -q "already setup"; then
+    echo "PM2 startup already configured."
+else
+    echo "PM2 startup requires sudo. Running setup..."
+    # Get the startup command and execute it
+    STARTUP_CMD=$(pm2 startup systemd -u ubuntu --hp /home/ubuntu | grep "sudo" | head -1)
+    if [ -n "$STARTUP_CMD" ]; then
+        echo "Executing: $STARTUP_CMD"
+        eval "$STARTUP_CMD" || echo "Warning: PM2 startup setup failed. You may need to run it manually."
+    else
+        echo "Warning: Could not extract PM2 startup command. Continuing anyway..."
+        echo "You can set up PM2 startup later with: pm2 startup systemd -u ubuntu --hp /home/ubuntu"
+    fi
 fi
 
 # Step 12: Restart application
 echo "Step 12: Restarting application..."
 cd "$APP_DIR"
 
+# Verify files are in place
+if [ ! -f "server.js" ]; then
+    echo "Error: server.js not found in $APP_DIR"
+    exit 1
+fi
+
+if [ ! -f "ecosystem.config.js" ]; then
+    echo "Error: ecosystem.config.js not found in $APP_DIR"
+    exit 1
+fi
+
 # Stop existing instance if running
 pm2 delete be-smart-server 2>/dev/null || true
 
 # Start application
+echo "Starting application with PM2..."
 pm2 start ecosystem.config.js
 
 # Save PM2 configuration
