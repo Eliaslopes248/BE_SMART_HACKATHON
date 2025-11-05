@@ -19,7 +19,7 @@ async function example2() {
     try {
         const response = await bedrock.invokeModel(
             'Explain quantum computing in simple terms.',
-            'meta.llama3-70b-instant-v1:0' // Override to use 70B model
+            'meta.llama3-70b-instruct-v1:0' // Override to use 70B instruct model
         );
         console.log('Response:', response);
     } catch (error) {

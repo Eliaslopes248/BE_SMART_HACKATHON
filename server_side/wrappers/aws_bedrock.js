@@ -6,14 +6,14 @@
 //=================================================
 
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
-const { defaultProvider } = require('@aws-sdk/credential-providers');
+const { fromNodeProviderChain }                    = require('@aws-sdk/credential-providers');
 
 //=================================================
 // Configuration from environment variables
 //=================================================
 const BEDROCK_CONFIG = {
-    region: process.env.AWS_REGION || process.env.BEDROCK_REGION || 'us-east-2',
-    defaultModel: process.env.BEDROCK_DEFAULT_MODEL || 'meta.llama3-8b-instant-v1:0'
+    region: process.env.AWS_REGION || process.env.BEDROCK_REGION || 'us-east-1',
+    defaultModel: process.env.BEDROCK_DEFAULT_MODEL || 'meta.llama3-8b-instruct-v1:0'
 };
 
 //=================================================
@@ -28,7 +28,7 @@ function getBedrockClient() {
     if (!bedrockClient) {
         bedrockClient = new BedrockRuntimeClient({
             region: BEDROCK_CONFIG.region,
-            credentials: defaultProvider() // Uses default credential chain: env vars, ~/.aws/credentials, instance profile, etc.
+            credentials: fromNodeProviderChain() // Uses default credential chain: env vars, ~/.aws/credentials, instance profile, etc.
         });
     }
     return bedrockClient;
