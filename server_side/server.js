@@ -27,10 +27,6 @@ const BASE_URL = process.env.BASE_URL;
 // IMPORT ENDPOINT MODULES HERE
 //=================================================
 
-//----------- bedrock testing ----------------
-const bedrock_tests = require("./wrappers/usage-examples/aws_bedrock.example.js");
-
-bedrock_tests.example4();
 
 
 //=================================================
