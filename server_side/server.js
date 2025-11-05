@@ -99,7 +99,8 @@ app.use((req, res) => {
 
 
 // node server listener at PORT
-app.listen(PORT, async ()=>{
-    console.log("Server is listening at PORT:", PORT);
+// Listen on 0.0.0.0 to accept connections from all network interfaces
+app.listen(PORT, '0.0.0.0', async ()=>{
+    console.log("Server is listening on 0.0.0.0:" + PORT);
     console.log("Serving static files at:", BASE_URL);
 });
