@@ -4,7 +4,7 @@
 # ======================================================
 
 # install list of server modules
-DEPENDENCIES="" 
+DEPENDENCIES="express body-parser url path fs dotenv cors google-auth-library jsonwebtoken bcrypt @aws-sdk/client-bedrock-runtime @aws-sdk/client-rds @aws-sdk/credential-providers mysql2"
 
 # make sure node server is init
 
@@ -20,4 +20,7 @@ if [ -f package.json ]; then
 fi
 
 # run server
+# Set NODE_ENV to development if not already set
+export NODE_ENV=${NODE_ENV:-development}
+echo "Running server in ${NODE_ENV} mode..."
 node server.js

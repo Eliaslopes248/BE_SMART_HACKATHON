@@ -14,7 +14,7 @@ REACT_DIR="$PROJECT_ROOT/be-smart"
 cd "$REACT_DIR"
 
 # install list of react modules (add dependencies here if needed)
-DEPENDENCIES="" 
+DEPENDENCIES="react-loading-skeleton react-google-button jwt-decode tailwindcss @tailwindcss/vite google-one-tap react-icons react-router-dom @supabase/supabase-js motion usehooks-ts jwt-decode bcrypt" 
 
 # install all dependencies
 echo "Installing modules...."
