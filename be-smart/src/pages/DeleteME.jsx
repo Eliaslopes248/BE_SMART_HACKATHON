@@ -1,8 +1,17 @@
 import React from 'react'
+import TextToSpeech from '../components/TextToSpeech'
+import SpeechToText from '../components/SpeechToText'
 
 export default function DeleteME() {
   return (
-    <div className=''>Testing....</div>
+    <>
+
+        <div className=''>Testing....</div>
+        <TextToSpeech/> 
+        <SpeechToText/> 
+        
+    </>
+   
   )
 }
 
