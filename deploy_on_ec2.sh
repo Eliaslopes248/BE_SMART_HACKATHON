@@ -11,7 +11,7 @@ set -e  # Exit on error
 # Configuration
 APP_DIR="/home/ubuntu/be-smart-app"
 REACT_DIR="/home/ubuntu/be-smart"
-GIT_REPO_URL="${GIT_REPO_URL:-}"  # Set this environment variable or update below
+GIT_REPO_URL="${GIT_REPO_URL:-https://github.com/Eliaslopes248/BE_SMART_HACKATHON.git}"  # Set this environment variable or update below
 PROJECT_DIR="/home/ubuntu/BE_SMART_HACKATHON"
 
 echo "=========================================="
