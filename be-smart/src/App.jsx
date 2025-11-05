@@ -1,5 +1,5 @@
 import {BrowserRouter as Router, Routes, Route} from "react-router-dom"
-import DeleteME                                 from "./pages/deleteME"
+import DeleteME                                 from "./pages/DeleteME"
 
 function App() {
   
