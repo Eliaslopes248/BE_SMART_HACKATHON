@@ -1,8 +1,19 @@
 import React from 'react'
+import TextToSpeech from '../components/custom-input/TextToSpeech'
+import SpeechToText from '../components/custom-input/SpeechToText'
+import GoogleAuthButton from '../components/auth/GoogleAuthButton'
 
 export default function DeleteME() {
   return (
-    <div className=''>Testing....</div>
+    <>
+
+        <div className=''>Testing....</div>
+        <TextToSpeech/> 
+        <SpeechToText/> 
+        <GoogleAuthButton/>
+        
+    </>
+   
   )
 }
 
