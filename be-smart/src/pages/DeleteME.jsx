@@ -1,6 +1,7 @@
 import React from 'react'
-import TextToSpeech from '../components/TextToSpeech'
-import SpeechToText from '../components/SpeechToText'
+import TextToSpeech from '../components/custom-input/TextToSpeech'
+import SpeechToText from '../components/custom-input/SpeechToText'
+import GoogleAuthButton from '../components/auth/GoogleAuthButton'
 
 export default function DeleteME() {
   return (
@@ -9,6 +10,7 @@ export default function DeleteME() {
         <div className=''>Testing....</div>
         <TextToSpeech/> 
         <SpeechToText/> 
+        <GoogleAuthButton/>
         
     </>
    
