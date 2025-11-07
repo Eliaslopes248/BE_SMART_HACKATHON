@@ -17,7 +17,8 @@ const { RC_CODES }      = require('../utils/error.js');
 //===============================================
 
 async function authorizeLogin(req, res, next){
-    next();
+        next();
+    
 }
 
 async function authorizeRegistration(req, res, next){
@@ -31,7 +32,7 @@ async function authorizeRegistration(req, res, next){
 
 //register user with registration credentials
 router.post("/basic/register", authorizeRegistration, (req, res) => {
-    
+
 });
 
 // register user with google token
