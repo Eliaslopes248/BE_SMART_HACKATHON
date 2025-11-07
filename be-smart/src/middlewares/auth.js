@@ -14,7 +14,7 @@ async function invokeGoogleAuth(jwt) {
     if (!jwt) return null;
     try {
         // request for authenticated user session
-        const response = await API.post(`${API.getBaseUrl}/api/google/auth`,{ token: jwt });
+        const response = await API.post(`/api/google/auth`,{ token: jwt });
 
         // check for status
         if (response.status != 200){
@@ -47,7 +47,7 @@ async function invokeBasicLogin(userData) {
 
     try {
         // send auth request to server
-        const response = await API.post(`${API.getBaseUrl}/api/auth/basic/login`, { credentials: userData });
+        const response = await API.post(`/api/auth/basic/login`, { credentials: userData });
 
         // check for status
         if (response.status != 200){
@@ -82,7 +82,7 @@ async function invokeBasicRegister(userData) {
 
     try {
         // send auth request to server
-        const response = await API.post(`${API.getBaseUrl}/api/auth/basic/register`, { credentials: userData });
+        const response = await API.post(`/api/auth/basic/register`, { credentials: userData });
 
         // check for status
         if (response.status != 200){
