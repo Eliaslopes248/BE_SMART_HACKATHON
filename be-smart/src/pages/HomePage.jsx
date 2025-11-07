@@ -72,7 +72,7 @@ export default function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/dashboard" className="inline-flex items-center px-5 py-2.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600">Go to Dashboard</Link>
-                <Link to="/problem" className="inline-flex items-center px-5 py-2.5 rounded-md border border-gray-300 text-gray-600 hover:text-green-600 hover:border-green-400 hover:bg-green-50 transition-colors dark:border-gray-600 dark:hover:text-white dark:hover:border-green-500 dark:hover:bg-green-900/20">View Problem</Link>
+                <Link to="/make-a-report" className="inline-flex items-center px-5 py-2.5 rounded-md border border-gray-300 text-gray-600 hover:text-green-600 hover:border-green-400 hover:bg-green-50 transition-colors dark:border-gray-600 dark:hover:text-white dark:hover:border-green-500 dark:hover:bg-green-900/20">Make a Report</Link>
               </div>
             </div>
 
