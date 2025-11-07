@@ -5,6 +5,7 @@ This document outlines the CSS variables and utility classes available throughou
 ## Colors
 
 ### Primary Colors (Greensboro Green)
+
 ```css
 --color-primary: #16a34a; /* Main green (green-600) */
 --color-primary-hover: #15803d; /* Darker green for hover (green-700) */
@@ -16,6 +17,7 @@ This document outlines the CSS variables and utility classes available throughou
 ```
 
 ### Text Colors
+
 ```css
 --color-text-primary: #374151; /* Main text (gray-700) */
 --color-text-secondary: #4b5563; /* Secondary text (gray-600) */
@@ -25,6 +27,7 @@ This document outlines the CSS variables and utility classes available throughou
 ```
 
 ### Background Colors
+
 ```css
 --color-bg-primary: #ffffff; /* White */
 --color-bg-secondary: #f9fafb; /* Light gray (gray-50) */
@@ -33,6 +36,7 @@ This document outlines the CSS variables and utility classes available throughou
 ```
 
 ### Border Colors
+
 ```css
 --color-border: #d1d5db; /* Standard border (gray-300) */
 --color-border-light: #e5e7eb; /* Light border (gray-200) */
@@ -49,6 +53,7 @@ This document outlines the CSS variables and utility classes available throughou
 ## Buttons
 
 ### Primary Button
+
 Use the `.btn-primary` class or apply styles manually:
 
 ```css
@@ -61,6 +66,7 @@ font-weight: var(--button-primary-font-weight);
 ```
 
 ### Secondary Button
+
 Use the `.btn-secondary` class or apply styles manually:
 
 ```css
@@ -74,12 +80,13 @@ border-radius: var(--button-secondary-radius);
 ### Usage Examples
 
 **React Component with CSS Variables:**
+
 ```jsx
-<button 
+<button
   style={{
-    backgroundColor: 'var(--button-primary-bg)',
-    color: 'var(--button-primary-text)',
-    padding: 'var(--button-primary-padding-y) var(--button-primary-padding-x)',
+    backgroundColor: "var(--button-primary-bg)",
+    color: "var(--button-primary-text)",
+    padding: "var(--button-primary-padding-y) var(--button-primary-padding-x)",
   }}
 >
   Click Me
@@ -87,6 +94,7 @@ border-radius: var(--button-secondary-radius);
 ```
 
 **React Component with Utility Classes:**
+
 ```jsx
 <Link to="/dashboard" className="btn-primary">
   Go to Dashboard
@@ -98,10 +106,9 @@ border-radius: var(--button-secondary-radius);
 ```
 
 **Tailwind with CSS Variables (inline styles):**
+
 ```jsx
-<div style={{ backgroundColor: 'var(--color-primary)' }}>
-  Content
-</div>
+<div style={{ backgroundColor: "var(--color-primary)" }}>Content</div>
 ```
 
 ## Typography
@@ -141,6 +148,7 @@ border-radius: var(--button-secondary-radius);
 ### Usage Examples
 
 **With Utility Classes:**
+
 ```jsx
 <h1 className="text-heading-xl">
   Main Heading
@@ -152,12 +160,15 @@ border-radius: var(--button-secondary-radius);
 ```
 
 **With CSS Variables:**
+
 ```jsx
-<h1 style={{ 
-  fontSize: 'var(--font-size-4xl)',
-  fontWeight: 'var(--font-weight-bold)',
-  color: 'var(--color-text-primary)'
-}}>
+<h1
+  style={{
+    fontSize: "var(--font-size-4xl)",
+    fontWeight: "var(--font-weight-bold)",
+    color: "var(--color-text-primary)",
+  }}
+>
   Custom Heading
 </h1>
 ```
@@ -185,7 +196,8 @@ border-radius: var(--button-secondary-radius);
 
 ```css
 --transition-default: all 0.2s ease-in-out;
---transition-colors: color 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+--transition-colors: color 0.2s ease-in-out, background-color 0.2s ease-in-out,
+  border-color 0.2s ease-in-out;
 ```
 
 ## Dark Mode
@@ -202,26 +214,41 @@ All color variables automatically adjust in dark mode when the `.dark` class is 
 ## Example: Complete Button Component
 
 ```jsx
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 export function PrimaryButton({ to, children, onClick }) {
   const className = "btn-primary";
-  
+
   if (to) {
-    return <Link to={to} className={className}>{children}</Link>;
+    return (
+      <Link to={to} className={className}>
+        {children}
+      </Link>
+    );
   }
-  
-  return <button onClick={onClick} className={className}>{children}</button>;
+
+  return (
+    <button onClick={onClick} className={className}>
+      {children}
+    </button>
+  );
 }
 
 export function SecondaryButton({ to, children, onClick }) {
   const className = "btn-secondary";
-  
+
   if (to) {
-    return <Link to={to} className={className}>{children}</Link>;
+    return (
+      <Link to={to} className={className}>
+        {children}
+      </Link>
+    );
   }
-  
-  return <button onClick={onClick} className={className}>{children}</button>;
+
+  return (
+    <button onClick={onClick} className={className}>
+      {children}
+    </button>
+  );
 }
 ```
-

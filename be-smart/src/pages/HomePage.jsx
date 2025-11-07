@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import gCom from '../assets/Greensboro-Com.mp4';
+
+import ViewTopReports from './ViewTopReports'
 
 export default function HomePage() {
   const highlights = [
@@ -87,6 +90,9 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+
+        <ViewTopReports />
+        <Footer />
       </section>
     </>
   );

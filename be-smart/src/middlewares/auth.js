@@ -93,6 +93,7 @@ async function invokeBasicRegister(userData) {
         // handle success
         if (response.status == 200){
             // sends back to jsx file I assume to be setUser context
+            console.log("Result:", response.userSession);
             return response.userSession;
         }else{
             console.error("Unable to register user:", response);

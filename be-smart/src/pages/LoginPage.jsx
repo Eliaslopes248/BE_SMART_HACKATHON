@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { SiGreenhouse } from "react-icons/si";
+import GoogleAuthButton from "../components/auth/GoogleAuthButton";
 
 export default function LoginPage() {
   return (
@@ -92,6 +93,20 @@ export default function LoginPage() {
               </button>
             </div>
           </form>
+
+          {/* Divider */}
+          <div className="mt-6">
+            <div className="relative flex items-center">
+              <div className="flex-grow h-px bg-gray-300 rounded-full"></div>
+              <span className="px-3 text-sm text-gray-500">Or continue with</span>
+              <div className="flex-grow h-px bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
+
+          {/* Google Auth Button */}
+          <div className="mt-6 flex justify-center">
+            <GoogleAuthButton />
+          </div>
 
           <p className="mt-8 text-center text-sm text-gray-600">
             Not a member?{" "}

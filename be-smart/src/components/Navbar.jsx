@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SiGreenhouse } from "react-icons/si";
+import { useUser } from './global-context/context_provider';
 
 export default function Navbar() {
+  // Get user authentication state
+  const { user } = useUser();
+  const isAuthenticated = !!user;
+  
   // Light/Dark mode toggle (class-based)
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -46,9 +51,12 @@ export default function Navbar() {
               <Link to="/" className="text-sm font-medium text-green-200">Home</Link>
             </div>
 
-            <div className="hidden md:flex items-center gap-6">
-              <Link to="/your-profile" className="text-sm font-medium text-green-200">Your Profile</Link>
-            </div>
+            {/* Only show Your Profile when user is authenticated */}
+            {isAuthenticated && (
+              <div className="hidden md:flex items-center gap-6">
+                <Link to="/your-profile" className="text-sm font-medium text-green-200">Your Profile</Link>
+              </div>
+            )}
           </div>
 
           {/* Right: Sign in */}
