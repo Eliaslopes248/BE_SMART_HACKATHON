@@ -2,7 +2,7 @@
 // HANDLE ALL SERVER COMMUNICATION
 //======================================
 import * as API  from "../utils/api.js"
-import jwtDecode from "jwt-decode"
+import { jwtDecode } from "jwt-decode"
 
 /**
  * sends jwt from google to be verified and then 
@@ -93,6 +93,7 @@ async function invokeBasicRegister(userData) {
         // handle success
         if (response.status == 200){
             // sends back to jsx file I assume to be setUser context
+            console.log("Result:", response.userSession);
             return response.userSession;
         }else{
             console.error("Unable to register user:", response);
@@ -104,4 +105,3 @@ async function invokeBasicRegister(userData) {
         return null;
     }
 }
-
