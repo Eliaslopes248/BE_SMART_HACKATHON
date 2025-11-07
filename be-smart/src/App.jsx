@@ -1,6 +1,9 @@
 import {BrowserRouter as Router, Routes, Route} from "react-router-dom"
 import DeleteME                                 from "./pages/DeleteME"
 import HomePage                                 from "./pages/HomePage"
+import LoginPage                                from "./pages/LoginPage"
+import CreateAccount                            from "./pages/CreateAccount"
+import MakeReport                               from "./pages/MakeReport";
 import ProtectedRoute                           from "./components/global-context/Protected_Routes"
 import { UserProvider }                         from "./components/global-context/context_provider"
 
@@ -13,6 +16,9 @@ function App() {
         <Routes>
           {/* filler page for now (delete asap) */}
           <Route path="/" element={<HomePage />}/>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/create-account" element={<CreateAccount />} />
+          <Route path="/make-a-report" element={<MakeReport />} />
 
           {/* example of using our protected routes */}
           <Route path="/test" element={<ProtectedRoute><DeleteME/></ProtectedRoute>}/>

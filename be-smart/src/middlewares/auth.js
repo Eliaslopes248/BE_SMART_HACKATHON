@@ -2,7 +2,7 @@
 // HANDLE ALL SERVER COMMUNICATION
 //======================================
 import * as API  from "../utils/api.js"
-import jwtDecode from "jwt-decode"
+import { jwtDecode } from "jwt-decode"
 
 /**
  * sends jwt from google to be verified and then 
@@ -104,4 +104,3 @@ async function invokeBasicRegister(userData) {
         return null;
     }
 }
-
