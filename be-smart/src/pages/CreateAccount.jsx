@@ -1,8 +1,25 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { SiGreenhouse } from "react-icons/si";
 
 export default function CreateAccount() {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setError("");
+    // TODO: send form data to backend or Firebase
+    alert("Account created successfully!");
+  };
+
   return (
     <>
       <Navbar />
@@ -29,7 +46,7 @@ export default function CreateAccount() {
 
         {/* Create Account Form */}
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm bg-white/80 backdrop-blur-lg rounded-xl p-8 shadow-lg ring-1 ring-green-200 relative z-10">
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* First Name */}
             <div>
               <label
@@ -116,10 +133,39 @@ export default function CreateAccount() {
                 name="password"
                 type="password"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="new-password"
                 className="mt-2 block w-full rounded-md bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
               />
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label
+                htmlFor="confirm"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Confirm Password
+              </label>
+              <input
+                id="confirm"
+                name="confirm"
+                type="password"
+                required
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="••••••••"
+                className={`mt-2 block w-full rounded-md bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                  error
+                    ? "focus:ring-red-500 border-red-400"
+                    : "focus:ring-green-500 focus:border-transparent"
+                } text-sm`}
+              />
+              {error && (
+                <p className="text-red-600 text-sm mt-1">{error}</p>
+              )}
             </div>
 
             {/* Submit */}
