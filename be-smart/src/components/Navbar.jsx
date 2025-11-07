@@ -41,9 +41,13 @@ export default function Navbar() {
           </div>
 
           {/* Center: Nav links */}
-          <div className="flex items-center justify-center flex-1">
+          <div className="flex items-center justify-center flex-1 gap-10">
             <div className="hidden md:flex items-center gap-6">
               <Link to="/" className="text-sm font-medium text-green-200">Home</Link>
+            </div>
+
+            <div className="hidden md:flex items-center gap-6">
+              <Link to="/your-profile" className="text-sm font-medium text-green-200">Your Profile</Link>
             </div>
           </div>
 
