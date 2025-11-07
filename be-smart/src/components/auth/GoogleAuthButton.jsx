@@ -6,6 +6,9 @@ const GoogleAuthButton = () => {
   const buttonRef = useRef(null);
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
+
+  
+
   // Handle Google authentication response
   const handleCredentialResponse = (response) => {
     const jwtToken = response.credential;

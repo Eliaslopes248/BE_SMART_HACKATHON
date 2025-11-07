@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import gCom from '../assets/Greensboro-Com.mp4';
+import PricingSection from './PricingSection';
 
 import ViewTopReports from './ViewTopReports'
 
@@ -92,6 +93,7 @@ export default function HomePage() {
         </div>
 
         <ViewTopReports />
+        <PricingSection showNavAndFooter={false} />
         <Footer />
       </section>
     </>

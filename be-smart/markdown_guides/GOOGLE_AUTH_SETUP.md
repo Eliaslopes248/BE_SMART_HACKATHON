@@ -39,6 +39,7 @@ VITE_BASE_URL=http://localhost:3000
 ### 3. Restart Your Development Server
 
 After creating/updating the `.env` file:
+
 - Stop your dev server (Ctrl+C)
 - Start it again with `npm run dev`
 - The environment variables will be loaded
@@ -73,4 +74,3 @@ After creating/updating the `.env` file:
 - The `.env` file should be in the `be-smart` directory (same level as `package.json`)
 - Never commit your `.env` file to version control (it should be in `.gitignore`)
 - For production, set environment variables in your hosting platform's settings
-
