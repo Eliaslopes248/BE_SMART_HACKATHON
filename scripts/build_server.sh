@@ -4,7 +4,7 @@
 # ======================================================
 
 # install list of server modules
-DEPENDENCIES="express body-parser url path fs dotenv cors google-auth-library jsonwebtoken bcrypt @aws-sdk/client-bedrock-runtime @aws-sdk/client-rds @aws-sdk/credential-providers mysql2"
+DEPENDENCIES="express body-parser url path fs dotenv cors google-auth-library jsonwebtoken bcrypt @aws-sdk/client-bedrock-runtime @aws-sdk/client-rds @aws-sdk/credential-providers mysql2 redis"
 
 # make sure node server is init
 

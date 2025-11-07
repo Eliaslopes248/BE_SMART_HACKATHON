@@ -1,4 +1,4 @@
-const { RC_CODES } = require('./errors.js');
+const { RC_CODES } = require('./error.js');
 
 //------------------------------------------------------------------
 // Standard response formatting

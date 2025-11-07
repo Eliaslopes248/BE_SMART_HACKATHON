@@ -26,7 +26,8 @@ const BASE_URL = process.env.BASE_URL;
 //=================================================
 // IMPORT ENDPOINT MODULES HERE
 //=================================================
-
+const googleEndpoints       = require("./wrappers/google.js");
+const authEndpoints         = require("./route_modules/auth.js");
 
 
 //=================================================
@@ -81,6 +82,12 @@ app.use(express.static(BUILD_PATH));
 //=================================================
 // SET SERVER INSTANCE TO USE MODULE ENDPOINTS
 //=================================================
+
+// google routes
+app.use("/api/google", googleEndpoints);
+
+// auth routes
+app.use("/api/auth", authEndpoints);
 
 
 //==============================================================================
