@@ -1,4 +1,5 @@
 //===============================================
+<<<<<<< HEAD
 // HANDLES ALL GIG ENDPOINTS
 //===============================================
 
@@ -573,6 +574,7 @@ async function extractGigFilters(req, res, next) {
 // HTTP ENDPOINTS
 //===============================================
 
+<<<<<<< HEAD
 // CREATE - Create a new gig
 router.post("/create", validateGigCreation, validateGigOwner, async (req, res) => {
     try {
@@ -602,6 +604,7 @@ router.post("/create", validateGigCreation, validateGigOwner, async (req, res) =
     }
 });
 
+<<<<<<< HEAD
 // READ - Get all gigs (with optional filters)
 router.get("/get/all", extractGigFilters, async (req, res) => {
     try {

@@ -94,8 +94,6 @@ const BUILD_PATH   = path.join(__dirname, "../be-smart/dist");
 // Serve static files from the React build (JS, CSS, images, etc.)
 // This should come AFTER API routes
 app.use(express.static(BUILD_PATH));
-
-
 //==============================================================================
 // SERVER ENPOINTS
 //==============================================================================
