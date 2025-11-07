@@ -93,10 +93,10 @@ async function invokeModel(prompt, modelId = null, options = {}) {
             body: body
         });
 
-        const response = await client.send(command);
-        const responseBody = JSON.parse(Buffer.from(response.body).toString());
+        const response      = await client.send(command);
+        const responseBody  = JSON.parse(Buffer.from(response.body).toString());
 
-        // Extract text from response based on model type
+        // get text from response based on model type
         let text;
         if (model.startsWith('meta.')) {
             // Llama models return: { generation: "text" }
