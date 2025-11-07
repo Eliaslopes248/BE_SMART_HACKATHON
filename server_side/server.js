@@ -28,6 +28,8 @@ const BASE_URL = process.env.BASE_URL;
 //=================================================
 const googleEndpoints       = require("./wrappers/google.js");
 const authEndpoints         = require("./route_modules/auth.js");
+const bedrockEndpoints      = require("./route_modules/bedrock.js");
+const gigsEndpoints         = require("./route_modules/gigs.js");
 
 
 //=================================================
@@ -88,6 +90,12 @@ app.use("/api/google", googleEndpoints);
 
 // auth routes
 app.use("/api/auth", authEndpoints);
+
+// bedrock routes
+app.use("/api/bedrock", bedrockEndpoints);
+
+// gigs routes
+app.use("/api/gigs", gigsEndpoints);
 
 //==============================================================================
 // SERVER ENPOINTS
