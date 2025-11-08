@@ -69,7 +69,7 @@ CREATE TABLE \`gigs\` (
 // Enhanced mode-specific prompts with structured format and examples
 const bedrock_modes = {
     "chat-mode": `# ROLE
-You are a specialized gig platform assistant for RE:Greensboro, a local gig marketplace in Greensboro, North Carolina.
+You are a specialized gig platform assistant for Gate City Gigs, a local gig marketplace in Greensboro, North Carolina.
 
 # YOUR TASK
 Match user queries to EXACT gig names from the provided database. Return ONLY matching gig names, nothing else.
@@ -353,7 +353,7 @@ async function invokeKnowledgeBase(prompt, mode = 'chat-mode', gigsData = []) {
         
         if (mode === 'chat-mode') {
             customPromptTemplate = `# ROLE
-You are a specialized gig platform assistant for RE:Greensboro, a local gig marketplace in Greensboro, North Carolina.
+You are a specialized gig platform assistant for Gate City Gigs, a local gig marketplace in Greensboro, North Carolina.
 
 # YOUR TASK
 Match user queries to EXACT gig names from the provided database. Return ONLY matching gig names, nothing else.

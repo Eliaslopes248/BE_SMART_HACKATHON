@@ -41,7 +41,7 @@ export default function Navbar() {
           <div className="flex items-center flex-1">
             <Link to="/" className="flex items-center gap-2">
               <SiGreenhouse className="h-13 w-13 text-green-400" />
-              <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">RE:Greensboro</span>
+              <span className="text-xl font-semibold text-gray-900 dark:text-gray-100">Gate City Gigs</span>
             </Link>
           </div>
 

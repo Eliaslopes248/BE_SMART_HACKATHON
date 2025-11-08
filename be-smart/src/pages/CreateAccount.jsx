@@ -95,7 +95,7 @@ export default function CreateAccount() {
           <div className="flex items-center gap-2 mb-4">
             <SiGreenhouse className="h-10 w-10 text-green-600" />
             <span className="text-lg font-semibold text-gray-800">
-              RE:Greensboro
+              Gate City Gigs
             </span>
           </div>
 

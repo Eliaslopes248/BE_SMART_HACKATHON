@@ -30,6 +30,7 @@ const googleEndpoints       = require("./wrappers/google.js");
 const authEndpoints         = require("./route_modules/auth.js");
 const gigsEndpoints         = require("./route_modules/gigs.js");
 const bedrockEndpoints      = require("./route_modules/bedrock.js");
+const filesEndpoints        = require("./route_modules/files.js");
 
 
 //=================================================
@@ -91,6 +92,9 @@ app.use("/api/gigs", gigsEndpoints);
 
 // bedrock routes
 app.use("/api/bedrock", bedrockEndpoints);
+
+// files routes
+app.use("/api/files", filesEndpoints);
 
 // access react build from dist folder
 const BUILD_PATH   = path.join(__dirname, "../be-smart/dist");

@@ -57,7 +57,7 @@ export default function Footer() {
         {/* Copyright Row */}
         <div className="text-center">
           <p className="text-sm text-gray-400">
-            © 2025 RE:Greensboro, Inc. All rights reserved
+            © 2025 Gate City Gigs, Inc. All rights reserved
           </p>
         </div>
       </div>

@@ -13,7 +13,7 @@ SERVER_DIR="$PROJECT_ROOT/server_side"
 cd "$SERVER_DIR"
 
 # Install server dependencies (kept identical to original)
-DEPENDENCIES="express body-parser url path fs dotenv cors google-auth-library jsonwebtoken bcrypt @aws-sdk/client-bedrock-runtime @aws-sdk/client-rds @aws-sdk/credential-providers mysql2 redis"
+DEPENDENCIES="express body-parser url path fs dotenv cors google-auth-library jsonwebtoken bcrypt @aws-sdk/client-bedrock-runtime @aws-sdk/client-rds @aws-sdk/client-s3 @aws-sdk/s3-request-presigner @aws-sdk/credential-providers mysql2 redis multer"
 
 echo "Installing server modules (WSL)..."
 if [ -f package.json ]; then
