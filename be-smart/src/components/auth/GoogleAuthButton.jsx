@@ -22,18 +22,20 @@ const GoogleAuthButton = () => {
     
     try {
       // Send token to backend using invokeGoogleAuth
-      const user = await invokeGoogleAuth(jwtToken);
+      const result = await invokeGoogleAuth(jwtToken);
       
-      if (user) {
-        console.log("Google auth successful, user:", user);
+      if (result.success && result.user) {
+        console.log("Google auth successful, user:", result.user);
         // Set user in context (invokeGoogleAuth already stores token)
-        setUser(user);
+        setUser(result.user);
         
         // Redirect to home page
         navigate("/");
       } else {
-        setError("Google authentication failed. Please try again.");
-        console.error("Google auth returned null user");
+        // Display error message from backend
+        const errorMessage = result.error || "Google authentication failed. Please try again.";
+        setError(errorMessage);
+        console.error("Google auth failed:", errorMessage);
       }
     } catch (err) {
       console.error("Error during Google authentication:", err);

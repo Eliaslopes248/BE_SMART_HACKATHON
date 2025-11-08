@@ -67,7 +67,8 @@ async function decodeToken(req, res, next){
 
 /**
  * checks users table to see if
- * user exists in the database, creates if not
+ * user exists in the database by email
+ * Only allows sign-in if email exists in database
  * @param {*} req 
  * @param {*} res 
  * @param {*} next 
@@ -83,21 +84,23 @@ async function userExists(req, res, next){
         const googleUser = req.user;
         const email = googleUser.email;
 
-        // Check if user exists by email
+        // Check if user exists by email in the database
         const existingUsers = await query(
             'SELECT * FROM Users WHERE email = ?',
             [email]
         );
 
         if (existingUsers && existingUsers.length > 0) {
-            // User exists, attach to request
+            // User exists in database, retrieve and attach to request
             const user = existingUsers[0];
+            
+            // Use database values, but fallback to Google data if null/empty
             req.user = {
                 uid: user.uid,
-                email: user.email,
-                fname: user.fname,
-                lname: user.lname,
-                username: user.username,
+                email: user.email || googleUser.email,
+                fname: user.fname || googleUser.firstName || 'User',
+                lname: user.lname || googleUser.lastName || '',
+                username: user.username || email.split('@')[0],
                 avatar_url: user.avatar_url || googleUser.picture,
                 googleId: googleUser.googleId,
                 fullName: googleUser.fullName,
@@ -106,52 +109,28 @@ async function userExists(req, res, next){
                 picture: googleUser.picture
             };
             console.log('Google user found in database:', user.email);
-        } else {
-            // User doesn't exist, create new user
-            const uid = randomUUID();
-            const username = email.split('@')[0]; // Generate username from email
-            const fname = googleUser.firstName || 'User';
-            const lname = googleUser.lastName || '';
+            console.log('User data retrieved:', {
+                uid: req.user.uid,
+                email: req.user.email,
+                fname: req.user.fname,
+                lname: req.user.lname,
+                username: req.user.username
+            });
             
-            // Insert new user (no password for Google auth users)
-            await query(
-                'INSERT INTO Users (uid, fname, lname, username, email, avatar_url, password, User_roles) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [uid, fname, lname, username, email, googleUser.picture || null, '', 'RESIDENT']
-            );
-
-            // Fetch the created user
-            const newUsers = await query(
-                'SELECT uid, fname, lname, username, email, avatar_url FROM Users WHERE uid = ?',
-                [uid]
-            );
-
-            if (newUsers && newUsers.length > 0) {
-                const user = newUsers[0];
-                req.user = {
-                    uid: user.uid,
-                    email: user.email,
-                    fname: user.fname,
-                    lname: user.lname,
-                    username: user.username,
-                    avatar_url: user.avatar_url,
-                    googleId: googleUser.googleId,
-                    fullName: googleUser.fullName,
-                    firstName: googleUser.firstName,
-                    lastName: googleUser.lastName,
-                    picture: googleUser.picture
-                };
-                console.log('Google user created in database:', user.email);
-            } else {
-                throw new Error('Failed to retrieve created user');
-            }
+            // sends to next callback()
+            next();
+        } else {
+            // User doesn't exist in database - return error
+            console.log('Google sign-in attempted with email not in database:', email);
+            return res.json(RC_RESPONSE(RC_CODES.UNAUTHORIZED, {
+                details: "No account found with this email address. Please create an account first.",
+                email: email
+            }));
         }
-
-        // sends to next callback()
-        next();
     }catch(error){
-        console.error("Error finding/creating user in database:", error);
+        console.error("Error finding user in database:", error);
         return res.json(RC_RESPONSE(RC_CODES.SERVER_ERROR, {
-            details: "Unexpected error during user lookup/creation",
+            details: "Unexpected error during user lookup",
             error: error.message
         }));
     }

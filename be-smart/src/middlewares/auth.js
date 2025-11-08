@@ -11,15 +11,21 @@ import { jwtDecode } from "jwt-decode"
  * @returns jwt - encoded
  */
 async function invokeGoogleAuth(jwt) {
-    if (!jwt) return null;
+    if (!jwt) return { success: false, error: "JWT token is required" };
     try {
         // request for authenticated user session
         const response = await API.post(`/api/google/auth`,{ token: jwt });
 
+        console.log("Google auth response:", response);
+
         // check for status
         if (response.status != 200){
             console.error("Unable to make request:", response);
-            return null;
+            // Return error details from response
+            return { 
+                success: false, 
+                error: response.details || "Google authentication failed. Please try again." 
+            };
         }
 
         // handle success
@@ -27,26 +33,38 @@ async function invokeGoogleAuth(jwt) {
             // decrypt jwt to get user data
             const decodedUser = jwtDecode(response.userToken);
             
+            console.log("Decoded JWT user data:", decodedUser);
+            
             // Format user object to match what frontend expects
+            // Handle null/undefined values gracefully
             const user = {
-                uid: decodedUser.uid,
-                email: decodedUser.email,
-                fname: decodedUser.fname,
-                lname: decodedUser.lname,
-                username: decodedUser.username,
-                avatar_url: decodedUser.avatar_url
+                uid: decodedUser.uid || null,
+                email: decodedUser.email || null,
+                fname: decodedUser.fname || null,
+                lname: decodedUser.lname || null,
+                username: decodedUser.username || null,
+                avatar_url: decodedUser.avatar_url || null
             };
             
             // Store the token for future requests
             localStorage.setItem("authToken", response.userToken);
             
-            return user;
+            console.log("Formatted user object:", user);
+            
+            return { success: true, user: user };
         }
         
-        return null;
+        console.error("Response missing userToken:", response);
+        return { 
+            success: false, 
+            error: response.details || "Google authentication failed. Please try again." 
+        };
     } catch (error) {
         console.error("Error when requesting continue with google auth:", error);
-        return null;
+        return { 
+            success: false, 
+            error: error.message || "An error occurred during Google authentication. Please try again." 
+        };
     }
 }
 

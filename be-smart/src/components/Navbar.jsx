@@ -1,18 +1,21 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { SiGreenhouse } from "react-icons/si";
 import { useUser } from './global-context/context_provider';
-import { BsPlusSquare, BsPersonCircle } from "react-icons/bs";
+import { BsPlusSquare, BsPersonCircle, BsBoxArrowRight } from "react-icons/bs";
 
 
 export default function Navbar() {
   // Get user authentication state
-  const { user } = useUser();
+  const { user, setUser } = useUser();
   const isAuthenticated = !!user;
+  const navigate = useNavigate();
   
   // Light/Dark mode toggle (class-based)
   const [dark, setDark] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('theme');
@@ -28,6 +31,31 @@ export default function Navbar() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Handle click outside to close user menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleSignOut = () => {
+    // Clear user from context
+    setUser(null);
+    // Clear auth token from localStorage
+    localStorage.removeItem('authToken');
+    // Close menu
+    setShowUserMenu(false);
+    // Redirect to home page
+    navigate('/');
+  };
 
   return (
     <header
@@ -81,21 +109,46 @@ export default function Navbar() {
                 Sign In
               </Link>
             ) : (
-              <Link
-                to="/your-profile"
-                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                title="Your Profile"
-              >
-                {user?.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt="User avatar"
-                    className="w-10 h-10 rounded-full object-cover border-2 border-green-400"
-                  />
-                ) : (
-                  <BsPersonCircle className="w-10 h-10 text-green-400 hover:text-green-500 transition-colors" />
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  title="User menu"
+                >
+                  {user?.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt="User avatar"
+                      className="w-10 h-10 rounded-full object-cover border-2 border-green-400"
+                    />
+                  ) : (
+                    <BsPersonCircle className="w-10 h-10 text-green-400 hover:text-green-500 transition-colors" />
+                  )}
+                </button>
+
+                {/* User Dropdown Menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
+                    <Link
+                      to="/your-profile"
+                      onClick={() => setShowUserMenu(false)}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <BsPersonCircle className="w-4 h-4" />
+                        <span>Your Profile</span>
+                      </div>
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    >
+                      <BsBoxArrowRight className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 )}
-              </Link>
+              </div>
             )}
           </div>
         </div>
