@@ -69,10 +69,10 @@ export default function HomePage() {
             {/* Left: Text content */}
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-gray-700">
-              Taking the Gate City forward, together.
+              Making Greensboro’s local economy visible again.
               </h1>
               <p className="mt-4 text-lg md:text-xl text-gray-700 max-w-2xl">
-              Empowering Greensboro with transparent data, modern tools, and a shared vision for growth that works for everyone.
+              A modern, ethical gig platform that turns hidden local work into opportunity — empowering residents, small businesses, and neighborhoods to grow together.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link to="/dashboard" className="inline-flex items-center px-5 py-2.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600">Go to Dashboard</Link>
