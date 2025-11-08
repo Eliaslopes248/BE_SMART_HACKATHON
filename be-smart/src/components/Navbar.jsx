@@ -54,9 +54,12 @@ export default function Navbar() {
               placeholder="Search..."
               className="w-full max-w-md h-10 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:shadow-outline text-base shadow-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
-            <Link to="/add-gig" className="flex items-center">
-              <BsPlusSquare className="h-6 w-6 text-green-400 hover:text-green-500 cursor-pointer transition-colors" />
-            </Link>
+            {/* Only show Plus Icon when user is authenticated */}
+            {isAuthenticated && (
+              <Link to="/add-gig" className="flex items-center">
+                <BsPlusSquare className="h-6 w-6 text-green-400 hover:text-green-500 cursor-pointer transition-colors" />
+              </Link>
+            )}
           </div>
 
           {/* Right: Home, Your Profile, and Sign in */}
