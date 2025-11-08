@@ -1,9 +1,64 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { SiGreenhouse } from "react-icons/si";
 import GoogleAuthButton from "../components/auth/GoogleAuthButton";
+import { invokeBasicLogin } from "../middlewares/auth.js";
+import { useUser } from "../components/global-context/context_provider.jsx";
+import Chatbot from "../components/chatbot/chatbot";
 
 export default function LoginPage() {
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { setUser } = useUser();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    // Get form data
+    const formData = new FormData(e.target);
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    // Generate username from email (part before @) - backend expects username
+    const username = email.split("@")[0];
+
+    // Prepare login data for API
+    const loginData = {
+      username: username,
+      password: password
+    };
+
+    try {
+      // Call login API
+      const result = await invokeBasicLogin(loginData);
+
+      if (result.success && result.userSession) {
+        // Set user in context
+        setUser(result.userSession.user);
+        
+        // Store token if needed
+        if (result.userSession.token) {
+          localStorage.setItem("authToken", result.userSession.token);
+        }
+
+        // Redirect to home page
+        navigate("/");
+      } else {
+        // Show error message from API
+        setError(result.error || "Login failed. Please check your credentials.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An error occurred during login. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -30,7 +85,7 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm bg-white/80 backdrop-blur-lg rounded-xl p-8 shadow-lg ring-1 ring-green-200 relative z-10">
-          <form className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
               <label
@@ -83,13 +138,21 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-md bg-red-50 p-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
             {/* Submit */}
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition"
+                disabled={isLoading}
+                className="flex w-full justify-center rounded-md bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign in
+                {isLoading ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>
@@ -119,6 +182,7 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+      <Chatbot />
     </>
   );
 }

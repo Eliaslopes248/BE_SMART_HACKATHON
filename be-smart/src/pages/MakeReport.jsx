@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
+import Chatbot from "../components/chatbot/chatbot";
 
 export default function MakeReport() {
   const [title, setTitle] = useState("");
@@ -104,6 +105,7 @@ export default function MakeReport() {
           </form>
         </div>
       </div>
+      <Chatbot />
     </>
   );
 }

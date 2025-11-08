@@ -1,16 +1,18 @@
+import Chatbot from '../components/chatbot/chatbot';
+
 const posts = [
     {
       id: 1,
-      title: 'Pothole repair needed on Elm Street near downtown transit hub',
+      title: 'PC Building & Repair Services Needed - Downtown Greensboro',
       href: '#',
       description:
-        'Multiple potholes on Elm Street between Market and Greene are causing damage to vehicles and creating safety hazards for cyclists. This area serves as a key transit connection point and needs urgent attention to maintain accessibility for public transportation users.',
+        'Local tech startup needs custom PC builds for their new office. Seeking verified technicians who can assemble gaming and workstation PCs. Must be able to work locally - no shipping required. Community-sponsored opportunity with verified payment through the platform.',
       date: 'Jan 15, 2024',
       datetime: '2024-01-15',
-      category: { title: 'resident', href: '#' },
+      category: { title: 'gig', href: '#' },
       author: {
-        name: 'Sarah Johnson',
-        role: 'Downtown Resident',
+        name: 'TechStart Greensboro',
+        role: 'Verified Small Business',
         href: '#',
         imageUrl:
           'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -18,15 +20,15 @@ const posts = [
     },
     {
       id: 2,
-      title: 'Affordable housing analysis for Westside neighborhood redevelopment',
+      title: 'Weekend Event Staff Needed - Toyota Battery Plant Community Fair',
       href: '#',
-      description: 'Comprehensive rent/ROI analysis using census data and permit records reveals high affordability pressure in Westside. This report identifies potential DGI Catalyst Grant opportunities for mixed-income development that could leverage NC Commerce incentives while preserving community access.',
+      description: 'Community-sponsored event at the new Toyota Battery Manufacturing facility needs local event staff for setup, coordination, and breakdown. Perfect for residents in economically distressed neighborhoods seeking flexible weekend work. Transportation assistance available for qualified applicants.',
       date: 'Jan 12, 2024',
       datetime: '2024-01-12',
-      category: { title: 'developer', href: '#' },
+      category: { title: 'sponsored', href: '#' },
       author: {
-        name: 'Marcus Chen',
-        role: 'Urban Development Consultant',
+        name: 'Greensboro Community Partnership',
+        role: 'Community Organization',
         href: '#',
         imageUrl:
           'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -34,16 +36,16 @@ const posts = [
     },
     {
       id: 3,
-      title: 'School infrastructure assessment: Priority zones for capital investment',
+      title: 'Local Food Truck Needs Part-Time Social Media Manager',
       href: '#',
       description:
-        'Analysis of school facility conditions across Greensboro using open data from City GIS and NC OneMap. Identifies three priority zones where infrastructure improvements could yield the highest student achievement gains, aligned with Brookings research on targeted capital spending.',
+        'Growing food truck business in East Greensboro needs help managing Instagram and Facebook accounts. Flexible hours, perfect for students or those looking for side income. Remote work possible, but local knowledge of Greensboro neighborhoods is a plus. Small business owner seeking someone who understands the local community.',
       date: 'Jan 10, 2024',
       datetime: '2024-01-10',
-      category: { title: 'official', href: '#' },
+      category: { title: 'business', href: '#' },
       author: {
-        name: 'Dr. Patricia Williams',
-        role: 'City Planning Department',
+        name: 'Carolina Eats Food Truck',
+        role: 'Local Small Business',
         href: '#',
         imageUrl:
           'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -51,16 +53,16 @@ const posts = [
     },
     {
       id: 4,
-      title: 'Transit accessibility gaps in historically underserved communities',
+      title: 'Handyman Services - Multiple Home Repair Jobs in Westside',
       href: '#',
       description:
-        'Mapping transit routes against census tract data reveals service gaps in East Greensboro neighborhoods. This report uses Open Gate City data to identify where enhanced transit infrastructure could improve labor market participation and local commerce growth.',
+        'Property management company has 15+ small repair jobs across Westside neighborhood. Seeking local handypersons for painting, minor plumbing, and basic carpentry. Jobs are within 5-mile radius - perfect for those without reliable transportation. Verified payment and steady work for qualified applicants.',
       date: 'Jan 8, 2024',
       datetime: '2024-01-08',
-      category: { title: 'official', href: '#' },
+      category: { title: 'gig', href: '#' },
       author: {
-        name: 'James Rodriguez',
-        role: 'Transportation Analyst',
+        name: 'Greensboro Property Solutions',
+        role: 'Verified Business',
         href: '#',
         imageUrl:
           'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -68,16 +70,16 @@ const posts = [
     },
     {
       id: 5,
-      title: 'Small business opportunity zones: Data-driven location insights',
+      title: 'Local Tutoring Gigs - Math & Science Support for High School Students',
       href: '#',
       description:
-        'Using infrastructure data and market indicators to identify high-potential locations for small business development. Includes analysis of local grant eligibility (Greensboro Chamber programs) and proximity to anchor institutions that drive foot traffic.',
+        'Community center sponsoring after-school tutoring program needs qualified tutors. Focusing on students in economically distressed areas. Flexible scheduling, work from community centers or online. Great opportunity for college students or recent graduates looking to give back while earning income.',
       date: 'Jan 5, 2024',
       datetime: '2024-01-05',
-      category: { title: 'developer', href: '#' },
+      category: { title: 'sponsored', href: '#' },
       author: {
-        name: 'Lisa Park',
-        role: 'Economic Development Researcher',
+        name: 'Greensboro Youth Initiative',
+        role: 'Community Organization',
         href: '#',
         imageUrl:
           'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -85,16 +87,16 @@ const posts = [
     },
     {
       id: 6,
-      title: 'Park maintenance backlog affecting community health outcomes',
+      title: 'Graphic Design Needed - Small Business Branding Package',
       href: '#',
       description:
-        'Residents report deteriorating playground equipment and inadequate lighting in several neighborhood parks. Community input aggregated through the platform shows these parks serve as critical gathering spaces, and improvements could enhance local well-being and property values.',
+        'New local bakery opening in downtown needs logo design, menu layout, and social media graphics. Budget-conscious small business owner seeking talented local designer. Preference for designers who understand Greensboro\'s local culture and can work within budget. Great portfolio-building opportunity.',
       date: 'Jan 3, 2024',
       datetime: '2024-01-03',
-      category: { title: 'resident', href: '#' },
+      category: { title: 'business', href: '#' },
       author: {
-        name: 'Robert Thompson',
-        role: 'Community Organizer',
+        name: 'Sweet Greensboro Bakery',
+        role: 'Startup Business',
         href: '#',
         imageUrl:
           'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
@@ -107,8 +109,8 @@ const posts = [
       <div className="bg-gray-900 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:mx-0">
-            <h2 className="text-4xl font-semibold tracking-tight text-pretty text-white sm:text-5xl">Top Community Reports</h2>
-            <p className="mt-2 text-lg/8 text-gray-300">See what residents, officials, and developers are reporting across Greensboro.</p>
+            <h2 className="text-4xl font-semibold tracking-tight text-pretty text-white sm:text-5xl">Top Local Gigs</h2>
+            <p className="mt-2 text-lg/8 text-gray-300">Discover verified local opportunities, community-sponsored gigs, and small business needs across Greensboro.</p>
           </div>
           <div className="mx-auto mt-10 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 border-t border-gray-700 pt-10 sm:mt-16 sm:pt-16 lg:mx-0 lg:max-w-none lg:grid-cols-3">
             {posts.map((post) => (
@@ -148,7 +150,9 @@ const posts = [
               </article>
             ))}
           </div>
+          <div className="mx-auto mt-10 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 border-t border-gray-700 pt-10 sm:mt-16 sm:pt-16 lg:mx-0 lg:max-w-none lg:grid-cols-3"></div>
         </div>
+        <Chatbot />
       </div>
     )
   }

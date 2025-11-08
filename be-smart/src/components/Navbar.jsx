@@ -35,7 +35,7 @@ export default function Navbar() {
           : 'border-b border-transparent'
       } bg-gradient-to-r from-gray-50 via-gray-100 to-gray-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 transition-all duration-200`}
     >
-      <nav className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <nav className="container mx-auto max-w-8xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Left: Logo */}
           <div className="flex items-center flex-1">
@@ -47,10 +47,6 @@ export default function Navbar() {
 
           {/* Center: Nav links */}
           <div className="flex items-center justify-center flex-1 gap-10">
-            <div className="hidden md:flex items-center gap-6">
-              <Link to="/" className="text-sm font-medium text-green-200">Home</Link>
-            </div>
-
             {/* Only show Your Profile when user is authenticated */}
             {isAuthenticated && (
               <div className="hidden md:flex items-center gap-6">
@@ -59,8 +55,11 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Right: Sign in */}
-          <div className="flex items-center justify-end flex-1">
+          {/* Right: Home and Sign in */}
+          <div className="flex items-center justify-end flex-1 gap-4">
+            <Link to="/" className="text-sm font-medium text-green-200 hover:text-green-300 transition-colors">
+              Home
+            </Link>
             <Link
               to="/login"
               className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600"

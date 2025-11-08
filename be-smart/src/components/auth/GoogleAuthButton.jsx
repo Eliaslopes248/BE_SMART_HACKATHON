@@ -1,17 +1,46 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { invokeGoogleAuth } from "../../middlewares/auth.js";
+import { useUser } from "../global-context/context_provider.jsx";
 
 const GoogleAuthButton = () => {
   const [token, setToken] = useState(null);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const buttonRef = useRef(null);
+  const navigate = useNavigate();
+  const { setUser } = useUser();
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   // Handle Google authentication response
-  const handleCredentialResponse = (response) => {
+  const handleCredentialResponse = async (response) => {
     const jwtToken = response.credential;
     setToken(jwtToken);
-    console.log("Google JWT Token:", jwtToken);
-    // TODO: Send token to backend using invokeGoogleAuth from auth.js
+    setIsLoading(true);
+    setError(null);
+    console.log("Google JWT Token received, sending to backend...");
+    
+    try {
+      // Send token to backend using invokeGoogleAuth
+      const user = await invokeGoogleAuth(jwtToken);
+      
+      if (user) {
+        console.log("Google auth successful, user:", user);
+        // Set user in context (invokeGoogleAuth already stores token)
+        setUser(user);
+        
+        // Redirect to home page
+        navigate("/");
+      } else {
+        setError("Google authentication failed. Please try again.");
+        console.error("Google auth returned null user");
+      }
+    } catch (err) {
+      console.error("Error during Google authentication:", err);
+      setError("An error occurred during Google authentication. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // check for environment variables
@@ -144,8 +173,13 @@ const GoogleAuthButton = () => {
   }
 
   return (
-    <div className="flex justify-center">
-      <div ref={buttonRef} id="google-signin-button"></div>
+    <div className="flex flex-col items-center">
+      {isLoading && (
+        <p className="text-sm text-gray-600 mb-2">Signing in with Google...</p>
+      )}
+      <div className="flex justify-center">
+        <div ref={buttonRef} id="google-signin-button"></div>
+      </div>
     </div>
   );
 };

@@ -1,23 +1,28 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
+import Chatbot from "../components/chatbot/chatbot";
 
 export default function ProfilePage() {
   const [user, setUser] = useState({
-    fname: "Monic",
+    fname: "Monica", 
     lname: "Jennings",
     username: "monicajennings",
     email: "monica.jennings@example.com",
     avatar_url: "https://i.pravatar.cc/150?img=47",
     background_url:
       "https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1400&q=80",
-    user_role: "RESIDENT",
     Bio: "I am a resident of the city and I love to report problems in my community.",
+    certifications: [
+      { id: 1, name: "Community Safety Training.pdf" },
+      { id: 2, name: "Volunteer Program Completion.jpg" },
+    ],
   });
 
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState(user);
   const [preview, setPreview] = useState(user.avatar_url);
   const [bgPreview, setBgPreview] = useState(user.background_url);
+  const [uploadedCerts, setUploadedCerts] = useState(user.certifications);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,6 +41,19 @@ export default function ProfilePage() {
         setFormData((prev) => ({ ...prev, background_url: imgUrl }));
       }
     }
+  };
+
+  const handleCertUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const newCerts = files.map((file, idx) => ({
+      id: uploadedCerts.length + idx + 1,
+      name: file.name,
+    }));
+    setUploadedCerts((prev) => [...prev, ...newCerts]);
+    setFormData((prev) => ({
+      ...prev,
+      certifications: [...prev.certifications, ...newCerts],
+    }));
   };
 
   const handleSave = (e) => {
@@ -69,7 +87,6 @@ export default function ProfilePage() {
                 <p className="text-gray-600 text-sm">@{user.username}</p>
               </div>
 
-              {/* Edit Profile Button */}
               {!editMode ? (
                 <button
                   onClick={() => setEditMode(true)}
@@ -104,20 +121,6 @@ export default function ProfilePage() {
                 </p>
                 <p>
                   <strong>Email:</strong> {user.email}
-                </p>
-                <p>
-                  <strong>Role:</strong>{" "}
-                  <span
-                    className={`${
-                      user.user_role === "OFFICIAL"
-                        ? "text-red-600 font-semibold"
-                        : user.user_role === "R&D"
-                        ? "text-yellow-600 font-semibold"
-                        : "text-green-600 font-semibold"
-                    }`}
-                  >
-                    {user.user_role}
-                  </span>
                 </p>
                 <div className="pt-2 border-t border-gray-100">
                   <p className="text-gray-800 font-medium">Bio</p>
@@ -167,22 +170,6 @@ export default function ProfilePage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Role
-                  </label>
-                  <select
-                    name="user_role"
-                    value={formData.user_role}
-                    onChange={handleChange}
-                    className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500"
-                  >
-                    <option value="RESIDENT">Resident</option>
-                    <option value="R&D">R&D</option>
-                    <option value="OFFICIAL">Official</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
                     Bio
                   </label>
                   <textarea
@@ -194,7 +181,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Profile Picture Upload Box */}
+                {/* Profile Picture Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Profile Picture
@@ -212,7 +199,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Background Image Upload Box */}
+                {/* Background Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Background Image
@@ -230,6 +217,24 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                {/* Certifications Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Certifications
+                  </label>
+                  <div className="border-2 border-dashed border-green-400 rounded-lg p-3 text-center bg-green-50 hover:bg-green-100 transition">
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleCertUpload}
+                      className="w-full text-sm text-gray-600 cursor-pointer"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Upload certification files (PDF, JPG, PNG)
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   className="w-full bg-green-600 text-white py-2 rounded-md text-sm hover:bg-green-700"
@@ -240,8 +245,9 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Right: Recent Jobs Worked Section */}
-          <div className="md:col-span-2">
+          {/* Right: Jobs & Certifications */}
+          <div className="md:col-span-2 space-y-6">
+            {/* Recent Jobs */}
             <div className="bg-white p-5 rounded-xl shadow-md">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-gray-800">
@@ -267,9 +273,34 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
+
+            {/* Certifications Section */}
+            <div className="bg-white p-5 rounded-xl shadow-md">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Certifications
+              </h3>
+
+              {uploadedCerts.length === 0 ? (
+                <p className="text-gray-500 text-sm">
+                  No certifications uploaded yet.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {uploadedCerts.map((cert) => (
+                    <li
+                      key={cert.id}
+                      className="border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-700 bg-gray-50 hover:bg-white transition"
+                    >
+                      📄 {cert.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>
+      <Chatbot />
     </>
   );
 }

@@ -25,7 +25,7 @@ function App() {
           <Route path="/job-map" element={<JobMapPage />} />
 
           {/* example of using our protected routes */}
-          <Route path="/test" element={<ProtectedRoute><DeleteME/></ProtectedRoute>}/>
+          <Route path="/test" element={<DeleteME/>}/>
 
 
 

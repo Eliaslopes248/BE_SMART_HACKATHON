@@ -28,6 +28,8 @@ const BASE_URL = process.env.BASE_URL;
 //=================================================
 const googleEndpoints       = require("./wrappers/google.js");
 const authEndpoints         = require("./route_modules/auth.js");
+const gigsEndpoints         = require("./route_modules/gigs.js");
+const bedrockEndpoints      = require("./route_modules/bedrock.js");
 
 
 //=================================================
@@ -72,16 +74,11 @@ app.use((req, res, next) => {
     next();
 });
 
-
-// access react build from dist folder
-const BUILD_PATH   = path.join(__dirname, "../be-smart/dist");
-
-// Serve static files from the React build (JS, CSS, images, etc.)
-app.use(express.static(BUILD_PATH));
-
 //=================================================
 // SET SERVER INSTANCE TO USE MODULE ENDPOINTS
 //=================================================
+// API routes must be defined BEFORE static file serving
+// to ensure they are matched first
 
 // google routes
 app.use("/api/google", googleEndpoints);
@@ -89,7 +86,18 @@ app.use("/api/google", googleEndpoints);
 // auth routes
 app.use("/api/auth", authEndpoints);
 
+// gigs routes
+app.use("/api/gigs", gigsEndpoints);
 
+// bedrock routes
+app.use("/api/bedrock", bedrockEndpoints);
+
+// access react build from dist folder
+const BUILD_PATH   = path.join(__dirname, "../be-smart/dist");
+
+// Serve static files from the React build (JS, CSS, images, etc.)
+// This should come AFTER API routes
+app.use(express.static(BUILD_PATH));
 //==============================================================================
 // SERVER ENPOINTS
 //==============================================================================
