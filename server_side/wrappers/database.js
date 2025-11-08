@@ -23,7 +23,10 @@ const DB_CONFIG = {
     ssl: process.env.DB_SSL === 'true' || process.env.DB_SSL === '1' ? { rejectUnauthorized: false } : false,
     connectionLimit: parseInt(process.env.DB_CONNECTION_LIMIT || '20'),
     waitForConnections: true,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: parseInt(process.env.DB_CONNECT_TIMEOUT || '10000'), // 10 seconds default
+    acquireTimeout: parseInt(process.env.DB_ACQUIRE_TIMEOUT || '10000'), // 10 seconds default
+    timeout: parseInt(process.env.DB_TIMEOUT || '10000') // 10 seconds default
 };
 
 //=================================================
@@ -36,6 +39,15 @@ let pool = null;
 //=================================================
 async function initializePool() {
     try {
+        // Validate required database configuration
+        if (!DB_CONFIG.host || !DB_CONFIG.database || !DB_CONFIG.user) {
+            const missing = [];
+            if (!DB_CONFIG.host) missing.push('DB_HOST');
+            if (!DB_CONFIG.database) missing.push('DB_NAME');
+            if (!DB_CONFIG.user) missing.push('DB_USER');
+            throw new Error(`Missing required database configuration: ${missing.join(', ')}. Please check your .env file.`);
+        }
+
         let config = {
             host: DB_CONFIG.host,
             port: DB_CONFIG.port,
@@ -43,7 +55,10 @@ async function initializePool() {
             ssl: DB_CONFIG.ssl,
             waitForConnections: DB_CONFIG.waitForConnections,
             connectionLimit: DB_CONFIG.connectionLimit,
-            queueLimit: DB_CONFIG.queueLimit
+            queueLimit: DB_CONFIG.queueLimit,
+            connectTimeout: DB_CONFIG.connectTimeout,
+            acquireTimeout: DB_CONFIG.acquireTimeout,
+            timeout: DB_CONFIG.timeout
         };
 
         // Use IAM authentication if enabled
@@ -70,10 +85,36 @@ async function initializePool() {
         }
 
         pool = mysql.createPool(config);
-        console.log('Database connection pool initialized successfully');
+        console.log(`Database connection pool initialized successfully (host: ${DB_CONFIG.host}, database: ${DB_CONFIG.database})`);
+        
+        // Test the connection immediately
+        try {
+            const testConnection = await pool.getConnection();
+            await testConnection.ping();
+            testConnection.release();
+            console.log('Database connection test successful');
+        } catch (testError) {
+            console.error('Database connection test failed:', testError.message);
+            console.error('This may indicate:');
+            console.error('  1. Database host is unreachable from this network');
+            console.error('  2. Database credentials are incorrect');
+            console.error('  3. Database is behind a firewall/VPC');
+            console.error('  4. SSL configuration is incorrect');
+            // Don't throw here - let it fail on first query for better error context
+        }
+        
         return pool;
     } catch (error) {
         console.error('Error initializing database pool:', error);
+        console.error('Database configuration:', {
+            host: DB_CONFIG.host,
+            port: DB_CONFIG.port,
+            database: DB_CONFIG.database,
+            user: DB_CONFIG.user,
+            hasPassword: !!DB_CONFIG.password,
+            useIAMAuth: DB_CONFIG.useIAMAuth,
+            ssl: DB_CONFIG.ssl
+        });
         throw error;
     }
 }
@@ -103,7 +144,30 @@ async function query(query, params = []) {
         const [rows] = await pool.execute(query, params);
         return rows;
     } catch (error) {
-        console.error('Database query error:', error);
+        console.error('Database query error:', error.message);
+        console.error('Error code:', error.code);
+        console.error('Error sqlState:', error.sqlState);
+        
+        // Provide more helpful error messages
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+            const detailedError = new Error(`Database connection failed: Cannot connect to ${DB_CONFIG.host}:${DB_CONFIG.port}. ` +
+                `This usually means the database is unreachable from your network. ` +
+                `Check if: 1) The database is running, 2) Your IP is allowed in security groups, 3) VPN/tunnel is needed.`);
+            detailedError.originalError = error;
+            detailedError.code = error.code;
+            throw detailedError;
+        } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+            const detailedError = new Error(`Database authentication failed: Invalid username or password for ${DB_CONFIG.user}@${DB_CONFIG.host}`);
+            detailedError.originalError = error;
+            detailedError.code = error.code;
+            throw detailedError;
+        } else if (error.code === 'ENOTFOUND') {
+            const detailedError = new Error(`Database host not found: ${DB_CONFIG.host}. Check your DB_HOST configuration.`);
+            detailedError.originalError = error;
+            detailedError.code = error.code;
+            throw detailedError;
+        }
+        
         throw error;
     }
 }
