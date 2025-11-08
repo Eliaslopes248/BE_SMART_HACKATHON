@@ -1,5 +1,4 @@
 //===============================================
-<<<<<<< HEAD
 // HANDLES ALL GIG ENDPOINTS
 //===============================================
 
@@ -574,7 +573,6 @@ async function extractGigFilters(req, res, next) {
 // HTTP ENDPOINTS
 //===============================================
 
-<<<<<<< HEAD
 // CREATE - Create a new gig
 router.post("/create", validateGigCreation, validateGigOwner, async (req, res) => {
     try {
@@ -604,7 +602,6 @@ router.post("/create", validateGigCreation, validateGigOwner, async (req, res) =
     }
 });
 
-<<<<<<< HEAD
 // READ - Get all gigs (with optional filters)
 router.get("/get/all", extractGigFilters, async (req, res) => {
     try {
@@ -619,6 +616,41 @@ router.get("/get/all", extractGigFilters, async (req, res) => {
         console.error('Error in GET /api/gigs:', error);
         return res.json(RC_RESPONSE(RC_CODES.SERVER_ERROR, {
             details: 'Failed to fetch gigs',
+            error: error.message
+        }));
+    }
+});
+
+// READ - Get gigs by tag
+router.get("/by-tag", async (req, res) => {
+    try {
+        const { tag } = req.query;
+        
+        if (!tag || typeof tag !== 'string') {
+            return res.json(RC_RESPONSE(RC_CODES.BAD_REQUEST, {
+                details: 'Tag is required and must be a string'
+            }));
+        }
+
+        // Validate tag
+        if (!isValidGigTag(tag)) {
+            return res.json(RC_RESPONSE(RC_CODES.VALIDATION_ERROR, {
+                details: `gig_tag must be one of: ${GIG_TAGS.join(', ')}`
+            }));
+        }
+
+        const filters = { gig_tag: tag };
+        const gigs = await getAllGigs(filters);
+
+        return res.json(RC_RESPONSE(RC_CODES.SUCCESS, {
+            gigs: gigs,
+            count: gigs.length,
+            tag: tag
+        }));
+    } catch (error) {
+        console.error('Error in GET /api/gigs/by-tag:', error);
+        return res.json(RC_RESPONSE(RC_CODES.SERVER_ERROR, {
+            details: 'Failed to fetch gigs by tag',
             error: error.message
         }));
     }

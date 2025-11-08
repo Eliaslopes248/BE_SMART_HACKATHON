@@ -14,7 +14,7 @@ export async function addGig(gigData) {
     }
 
     try {
-        const response = await API.post("/api/gigs", gigData);
+        const response = await API.post("/api/gigs/create", gigData);
 
         if (response.status !== 200) {
             console.error("Error adding gig:", response);
@@ -33,7 +33,7 @@ export async function addGig(gigData) {
  */
 export async function getAllGigs() {
     try {
-        const response = await API.post("/api/gigs/all", {});
+        const response = await API.get("/api/gigs/get/all");
 
         if (response.status !== 200) {
             console.error("Error fetching gigs:", response);
@@ -54,7 +54,7 @@ export async function getByTag(tag) {
     }
 
     try {
-        const response = await API.post("/api/gigs/by-tag", { tag :tag});
+        const response = await API.get(`/api/gigs/by-tag?tag=${encodeURIComponent(tag)}`);
 
         if (response.status !== 200) {
             console.error("Error fetching gigs by tag:", response);

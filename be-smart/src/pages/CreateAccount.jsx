@@ -1,24 +1,83 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { SiGreenhouse } from "react-icons/si";
 import GoogleAuthButton from "../components/auth/GoogleAuthButton";
+import { invokeBasicRegister } from "../middlewares/auth.js";
+import { useUser } from "../components/global-context/context_provider.jsx";
 
 export default function CreateAccount() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { setUser } = useUser();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    // Validate passwords match
     if (password !== confirm) {
       setError("Passwords do not match.");
+      setIsLoading(false);
       return;
     }
 
-    setError("");
-    // TODO: send form data to backend or Firebase
-    alert("Account created successfully!");
+    // Validate password length
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      setIsLoading(false);
+      return;
+    }
+
+    // Get form data
+    const formData = new FormData(e.target);
+    const firstName = formData.get("firstName");
+    const lastName = formData.get("lastName");
+    const email = formData.get("email");
+    const address = formData.get("address");
+
+    // Generate username from email (part before @)
+    const username = email.split("@")[0];
+
+    // Prepare user data for API
+    const userData = {
+      fname: firstName,
+      lname: lastName,
+      username: username,
+      password: password,
+      email: email,
+      address_hash: address || null
+    };
+
+    try {
+      // Call registration API
+      const result = await invokeBasicRegister(userData);
+
+      if (result.success && result.userSession) {
+        // Set user in context
+        setUser(result.userSession.user);
+        
+        // Store token if needed (you might want to store it in localStorage)
+        if (result.userSession.token) {
+          localStorage.setItem("authToken", result.userSession.token);
+        }
+
+        // Redirect to home page or dashboard
+        navigate("/");
+      } else {
+        // Show error message from API or default message
+        setError(result.error || "Registration failed. Please try again.");
+      }
+    } catch (err) {
+      console.error("Registration error:", err);
+      setError("An error occurred during registration. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -164,18 +223,23 @@ export default function CreateAccount() {
                     : "focus:ring-green-500 focus:border-transparent"
                 } text-sm`}
               />
-              {error && (
-                <p className="text-red-600 text-sm mt-1">{error}</p>
-              )}
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-md bg-red-50 p-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
 
             {/* Submit */}
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition"
+                disabled={isLoading}
+                className="flex w-full justify-center rounded-md bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account
+                {isLoading ? "Creating Account..." : "Create Account"}
               </button>
             </div>
           </form>
