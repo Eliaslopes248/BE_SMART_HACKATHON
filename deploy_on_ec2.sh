@@ -62,6 +62,10 @@ fi
 echo "Step 4: Building React app..."
 cd "$PROJECT_DIR/be-smart"
 npm install
+# Increase Node.js memory limit to handle large assets (like video files)
+export NODE_OPTIONS="--max-old-space-size=4096"
+# Set production API URL for the build
+export VITE_BASE_URL="http://ec2-3-16-159-211.us-east-2.compute.amazonaws.com:3000"
 npm run build
 
 if [ ! -d "dist" ]; then

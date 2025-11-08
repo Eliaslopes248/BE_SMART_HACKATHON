@@ -3,7 +3,9 @@
  * Uses VITE_BASE_URL from environment variables
  */
 
-const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+// Use VITE_BASE_URL if set, otherwise use relative URL (works when frontend/backend are same origin)
+// For production, VITE_BASE_URL should be set during build
+const API_BASE_URL = import.meta.env.VITE_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
 /**
  * Make a GET request
