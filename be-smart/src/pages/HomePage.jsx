@@ -76,7 +76,7 @@ export default function HomePage() {
               Our platform turns hidden local work into visible, ethical opportunities that empower people and neighborhoods to grow.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/dashboard" className="inline-flex items-center px-5 py-2.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600">Go to Dashboard</Link>
+                <Link to="/job-map" className="inline-flex items-center px-5 py-2.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600">Go to Dashboard</Link>
               </div>
             </div>
 
