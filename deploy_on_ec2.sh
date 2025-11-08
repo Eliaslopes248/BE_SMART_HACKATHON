@@ -62,6 +62,8 @@ fi
 echo "Step 4: Building React app..."
 cd "$PROJECT_DIR/be-smart"
 npm install
+# Increase Node.js memory limit to handle large assets (like video files)
+export NODE_OPTIONS="--max-old-space-size=4096"
 npm run build
 
 if [ ! -d "dist" ]; then

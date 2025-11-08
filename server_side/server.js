@@ -112,7 +112,13 @@ app.get("/api/health/database", async (req, res) => {
 });
 
 // access react build from dist folder
-const BUILD_PATH   = path.join(__dirname, "../be-smart/dist");
+// Use BUILD_PATH from environment variable, or fall back to relative path
+const BUILD_PATH = process.env.BUILD_PATH 
+    ? path.resolve(process.env.BUILD_PATH)
+    : path.join(__dirname, "../be-smart/dist");
+
+// Log the build path being used
+console.log("Build path configured:", BUILD_PATH);
 
 // Serve static files from the React build (JS, CSS, images, etc.)
 // This should come AFTER API routes
