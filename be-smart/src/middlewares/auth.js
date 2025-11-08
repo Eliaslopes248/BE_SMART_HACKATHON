@@ -21,16 +21,29 @@ async function invokeGoogleAuth(jwt) {
             console.error("Unable to make request:", response);
             return null;
         }
-        // handle other status codes
-
 
         // handle success
-        if (response.status == 200){
-            // decrypt jwt
-            const user = jwtDecode(response.userToken);
-            // sends back to jsx file i assume to be setUser context
+        if (response.status == 200 && response.userToken){
+            // decrypt jwt to get user data
+            const decodedUser = jwtDecode(response.userToken);
+            
+            // Format user object to match what frontend expects
+            const user = {
+                uid: decodedUser.uid,
+                email: decodedUser.email,
+                fname: decodedUser.fname,
+                lname: decodedUser.lname,
+                username: decodedUser.username,
+                avatar_url: decodedUser.avatar_url
+            };
+            
+            // Store the token for future requests
+            localStorage.setItem("authToken", response.userToken);
+            
             return user;
         }
+        
+        return null;
     } catch (error) {
         console.error("Error when requesting continue with google auth:", error);
         return null;

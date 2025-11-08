@@ -6,6 +6,7 @@
 //=================================================
 
 const { BedrockRuntimeClient, InvokeModelCommand } = require('@aws-sdk/client-bedrock-runtime');
+const { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } = require('@aws-sdk/client-bedrock-agent-runtime');
 const { fromNodeProviderChain }                    = require('@aws-sdk/credential-providers');
 
 //=================================================
@@ -13,13 +14,18 @@ const { fromNodeProviderChain }                    = require('@aws-sdk/credentia
 //=================================================
 const BEDROCK_CONFIG = {
     region: process.env.AWS_REGION || process.env.BEDROCK_REGION || 'us-east-2',
-    defaultModel: process.env.BEDROCK_DEFAULT_MODEL || 'anthropic.claude-3-haiku-20240307-v1:0'
+    // Using Claude 3 Haiku for fast, accurate responses - good for concise tasks
+    // Alternative: 'anthropic.claude-3-sonnet-20240229-v1:0' for better reasoning (slower, more expensive)
+    defaultModel: process.env.BEDROCK_DEFAULT_MODEL || 'anthropic.claude-3-haiku-20240307-v1:0',
+    knowledgeBaseId: process.env.BEDROCK_KNOWLEDGE_BASE_ID || null,
+    useKnowledgeBase: process.env.BEDROCK_USE_KNOWLEDGE_BASE === 'true' || false
 };
 
 //=================================================
-// Bedrock Client (lazy initialization)
+// Bedrock Clients (lazy initialization)
 //=================================================
 let bedrockClient = null;
+let bedrockAgentClient = null;
 
 
 
@@ -60,22 +66,102 @@ CREATE TABLE \`gigs\` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 `;
 
-// Enhanced mode-specific prompts with stronger instructions
+// Enhanced mode-specific prompts with structured format and examples
 const bedrock_modes = {
-    "chat-mode": `You are an assistant for a Greensboro, NC gig platform. 
+    "chat-mode": `# ROLE
+You are a specialized gig platform assistant for RE:Greensboro, a local gig marketplace in Greensboro, North Carolina.
 
-ABSOLUTE RULES - DO NOT VIOLATE:
-0. YOU DO NOT KNOW ANYTHING ABOUT FIVER ONLY RE:GREENSBORO
-1. ONLY list gigs that EXACTLY MATCH the names in the database below
-2. DO NOT create, invent, suggest, or mention ANY gigs that are NOT in the database list
-3. DO NOT use generic categories like "music gigs", "event planning gigs" - ONLY use exact gig names from database
-4. If no matching gigs in database, say ONLY: "No matching gigs found"
-5. NEVER mention Fiverr, Upwork, TaskRabbit, Uber, Lyft, or ANY other platform - this is FORBIDDEN
-6. DO NOT say "According to [platform]" or "On [platform]" - NEVER reference other platforms
-7. Keep response under 40 words - be extremely brief
-8. Format: List ONLY the exact gig names from database that match, one per line
+# YOUR TASK
+Match user queries to EXACT gig names from the provided database. Return ONLY matching gig names, nothing else.
 
-The database below contains ALL available gigs. You CANNOT mention anything not in that list. NEVER mention Fiverr or any other platform.`,
+# CRITICAL RULES - VIOLATING THESE WILL CAUSE REJECTION
+- **ONLY** list gigs that EXACTLY MATCH names in the database below
+- **NEVER** create, invent, or suggest gigs not in the database
+- **NEVER** mention Fiverr, Upwork, TaskRabbit, Uber, Lyft, or any other platform
+- **NEVER** use generic categories (e.g., "music gigs", "event planning gigs")
+- **ONLY** use exact gig names from the database
+- **NEVER** discuss job interviews, clothing, outfits, or any topic unrelated to gigs
+- **NEVER** provide general advice, greetings, or conversational responses
+- **NEVER** say "Hi", "Hello", "I can help", "You're welcome", "Good luck", or any conversational phrases
+- **ONLY** respond with gig names or "No matching gigs found"
+- Response must be EXACTLY 20 words or less - be extremely concise
+- Start with "chatbot-response: " prefix
+- If you cannot find matching gigs, respond ONLY with: "chatbot-response: No matching gigs found"
+
+# OUTPUT FORMAT
+Your response must follow this exact format:
+
+\`\`\`
+chatbot-response: [Gig Name 1]
+[Gig Name 2]
+[Gig Name 3]
+\`\`\`
+
+If no matches found:
+\`\`\`
+chatbot-response: No matching gigs found
+\`\`\`
+
+# EXAMPLES OF CORRECT RESPONSES
+
+**Example 1:**
+User: "What music gigs are available?"
+Database contains: "Jazz Band Performance", "Concert Setup Assistant"
+Response:
+\`\`\`
+chatbot-response: Jazz Band Performance
+Concert Setup Assistant
+\`\`\`
+
+**Example 2:**
+User: "I need event planning help"
+Database contains: "Wedding Coordinator", "Corporate Event Planner"
+Response:
+\`\`\`
+chatbot-response: Wedding Coordinator
+Corporate Event Planner
+\`\`\`
+
+**Example 3:**
+User: "Show me all gigs"
+Database contains: "Gig A", "Gig B", "Gig C"
+Response:
+\`\`\`
+chatbot-response: Gig A
+Gig B
+Gig C
+\`\`\`
+
+**Example 4:**
+User: "Find me photography gigs"
+Database contains: "Event Photographer", "Portrait Session"
+Response:
+\`\`\`
+chatbot-response: Event Photographer
+Portrait Session
+\`\`\`
+
+**Example 5:**
+User: "What construction jobs are there?"
+Database contains no construction-related gigs
+Response:
+\`\`\`
+chatbot-response: No matching gigs found
+\`\`\`
+
+# WHAT NOT TO DO
+
+❌ **WRONG:** "Based on the database, here are some music-related gigs: Jazz Band Performance"
+✅ **CORRECT:** "chatbot-response: Jazz Band Performance"
+
+❌ **WRONG:** "You might find these on Fiverr or other platforms..."
+✅ **CORRECT:** "chatbot-response: No matching gigs found"
+
+❌ **WRONG:** "Here are some event planning opportunities: Wedding Coordinator, Corporate Event Planner"
+✅ **CORRECT:** "chatbot-response: Wedding Coordinator\nCorporate Event Planner"
+
+# DATABASE
+The database below contains ALL available gigs. You CANNOT mention anything not in that list.`,
 
     "smart-search": `You are a SQL query generation expert. Your task is to convert natural language search requests into valid MySQL SELECT queries.
 
@@ -104,7 +190,7 @@ Generate the SQL query now:`
 
 
 //=================================================
-// Initialize Bedrock Client
+// Initialize Bedrock Clients
 //=================================================
 function getBedrockClient() {
     if (!bedrockClient) {
@@ -114,6 +200,16 @@ function getBedrockClient() {
         });
     }
     return bedrockClient;
+}
+
+function getBedrockAgentClient() {
+    if (!bedrockAgentClient) {
+        bedrockAgentClient = new BedrockAgentRuntimeClient({
+            region: BEDROCK_CONFIG.region,
+            credentials: fromNodeProviderChain()
+        });
+    }
+    return bedrockAgentClient;
 }
 
 //=================================================
@@ -166,8 +262,20 @@ function buildPromptWithMode(userPrompt, mode = 'chat-mode', gigsData = []) {
         // For smart-search, include schema, gigs data, and instructions
         return `${modePrompt}\n\n${gigsInfo}\n\nIMPORTANT: Use the actual gigs data above to generate a SQL query that will return relevant results. The query should match the user's search request against the actual data in the database.\n\nUser search request: ${userPrompt}`;
     } else {
-        // For chat-mode, include gigs data FIRST, then instructions, then user prompt
-        return `${modePrompt}\n\n${gigsInfo}\n\nVALID GIG NAMES (ONLY USE THESE): ${gigNames.join(', ')}\n\nYou MUST ONLY list gigs from the names above. DO NOT create new gig names.\n\nUser: ${userPrompt}\n\nAssistant:`;
+        // For chat-mode: structured prompt with clear sections
+        return `${modePrompt}
+
+# AVAILABLE GIGS DATABASE
+${gigsInfo}
+
+# VALID GIG NAMES (ONLY USE THESE - CASE INSENSITIVE)
+${gigNames.length > 0 ? gigNames.join(', ') : 'No gigs available'}
+
+# USER QUERY
+${userPrompt}
+
+# YOUR RESPONSE
+Remember: Start with "chatbot-response: " followed by matching gig names only, one per line.`;
     }
 }
 
@@ -217,10 +325,168 @@ function cleanResponse(response, userPrompt, mode = 'chat-mode') {
 }
 
 //=================================================
+// Invoke Knowledge Base (RetrieveAndGenerate)
+//=================================================
+/**
+ * Use Bedrock Knowledge Base with RetrieveAndGenerate API
+ * @param {string} prompt - The user's prompt
+ * @param {string} mode - The mode ('chat-mode' or 'smart-search')
+ * @param {Array} gigsData - Array of gig objects for context
+ * @returns {Promise<string>} The model's response
+ */
+async function invokeKnowledgeBase(prompt, mode = 'chat-mode', gigsData = []) {
+    try {
+        const agentClient = getBedrockAgentClient();
+        const knowledgeBaseId = BEDROCK_CONFIG.knowledgeBaseId;
+        
+        if (!knowledgeBaseId) {
+            throw new Error('Knowledge Base ID not configured. Set BEDROCK_KNOWLEDGE_BASE_ID environment variable.');
+        }
+
+        // Build custom prompt template using our existing mode prompts
+        const modePrompt = bedrock_modes[mode] || bedrock_modes['chat-mode'];
+        const gigsInfo = formatGigsData(gigsData);
+        
+        // Create custom prompt template for Knowledge Base
+        // The template uses {context} for retrieved documents and {input} for user query
+        let customPromptTemplate = '';
+        
+        if (mode === 'chat-mode') {
+            customPromptTemplate = `# ROLE
+You are a specialized gig platform assistant for RE:Greensboro, a local gig marketplace in Greensboro, North Carolina.
+
+# YOUR TASK
+Match user queries to EXACT gig names from the provided database. Return ONLY matching gig names, nothing else.
+
+# CRITICAL RULES
+- **ONLY** list gigs that EXACTLY MATCH names in the database below
+- **NEVER** create, invent, or suggest gigs not in the database
+- **NEVER** mention Fiverr, Upwork, TaskRabbit, Uber, Lyft, or any other platform
+- **NEVER** use generic categories (e.g., "music gigs", "event planning gigs")
+- **ONLY** use exact gig names from the database
+- Response must be EXACTLY 20 words or less - be extremely concise
+- Start with "chatbot-response: " prefix
+- **IGNORE** Knowledge Base context unless it specifically mentions Greensboro gigs/jobs
+- **NEVER** discuss temples, religion, spirituality, or any topic unrelated to gigs
+
+# OUTPUT FORMAT
+Your response must follow this exact format:
+
+\`\`\`
+chatbot-response: [Gig Name 1]
+[Gig Name 2]
+\`\`\`
+
+If no matches found:
+\`\`\`
+chatbot-response: No matching gigs found
+\`\`\`
+
+# AVAILABLE GIGS DATABASE (PRIMARY SOURCE)
+${gigsInfo}
+
+# VALID GIG NAMES (ONLY USE THESE)
+${gigsData.map(g => (g.gig_name || '').toLowerCase().trim()).filter(n => n).join(', ')}
+
+# KNOWLEDGE BASE CONTEXT (USE ONLY IF RELEVANT TO GREENSBORO GIGS)
+{context}
+
+**IMPORTANT:** If the Knowledge Base context is about self-care, mindfulness, books, organizations, or anything NOT related to Greensboro gigs, COMPLETELY IGNORE IT.
+
+# USER QUERY
+{input}
+
+# YOUR RESPONSE
+Remember: Start with "chatbot-response: " followed by matching gig names only, one per line.`;
+        } else {
+            customPromptTemplate = `${modePrompt}
+
+DATABASE SCHEMA AND GIGS DATA:
+${gigsInfo}
+
+Context from Knowledge Base:
+{context}
+
+User search request: {input}
+
+Generate SQL query:`;
+        }
+
+        const command = new RetrieveAndGenerateCommand({
+            input: {
+                text: prompt
+            },
+            retrieveAndGenerateConfiguration: {
+                type: 'KNOWLEDGE_BASE',
+                knowledgeBaseConfiguration: {
+                    knowledgeBaseId: knowledgeBaseId,
+                    modelArn: `arn:aws:bedrock:${BEDROCK_CONFIG.region}::foundation-model/${BEDROCK_CONFIG.defaultModel}`,
+                    retrievalConfiguration: {
+                        vectorSearchConfiguration: {
+                            numberOfResults: mode === 'chat-mode' ? 3 : 10  // Reduce results for chat-mode to minimize irrelevant context
+                        }
+                    }
+                },
+                generationConfiguration: {
+                    textPromptTemplate: customPromptTemplate,
+                    inferenceConfig: {
+                        maxTokens: mode === 'smart-search' ? 256 : 40, // Reduced to 40 tokens for 20 words
+                        temperature: mode === 'smart-search' ? 0.3 : 0.05, // Very low temp for more accurate responses
+                        topP: mode === 'smart-search' ? 0.9 : 0.7 // Lower for more focused responses
+                    }
+                }
+            }
+        });
+
+        const response = await agentClient.send(command);
+        
+        // Extract the generated text from the response
+        // Response structure: { output: { text: string }, citations: [...] }
+        if (response.output && response.output.text) {
+            let responseText = response.output.text;
+            
+            // Apply the same cleaning as direct invocation
+            responseText = cleanResponse(responseText, prompt, mode);
+            
+            // For chat-mode, validate that response is about gigs, not unrelated topics
+            if (mode === 'chat-mode') {
+                const responseLower = responseText.toLowerCase();
+                const validGigNames = gigsData.map(g => (g.gig_name || '').toLowerCase().trim()).filter(n => n);
+                
+                // Check for unrelated topics
+                const unrelatedTopics = [
+                    'self-care', 'mindfulness', 'meditation', 'yoga', 'wellness',
+                    'book', 'organization', 'namaste', 'routine', 'technique',
+                    'practice', 'insight', 'experience', 'thought', 'schedule'
+                ];
+                
+                const hasUnrelatedTopic = unrelatedTopics.some(topic => responseLower.includes(topic));
+                const hasValidGig = validGigNames.some(gigName => responseLower.includes(gigName));
+                const isNoMatchMessage = /no\s+(matching\s+)?gigs?/i.test(responseLower);
+                
+                // If response contains unrelated topics and no valid gigs, reject it
+                if (hasUnrelatedTopic && !hasValidGig && !isNoMatchMessage) {
+                    console.warn('[Bedrock Knowledge Base] Response contained unrelated topics - rejecting');
+                    responseText = 'chatbot-response: No matching gigs found';
+                }
+            }
+            
+            return responseText;
+        }
+        
+        throw new Error('No response text found in Knowledge Base response');
+    } catch (error) {
+        console.error('[Bedrock Knowledge Base] Error:', error);
+        throw error;
+    }
+}
+
+//=================================================
 // Invoke Model
 //=================================================
 /**
  * Send a text prompt to AWS Bedrock and get a response
+ * Uses Knowledge Base if configured, otherwise uses direct model invocation
  * @param {string} prompt - The text prompt to send
  * @param {string} modelId - Optional model ID to override default (e.g., 'meta.llama3-70b-instant-v1:0')
  * @param {object} options - Optional parameters (maxTokens, temperature, mode, etc.)
@@ -228,10 +494,19 @@ function cleanResponse(response, userPrompt, mode = 'chat-mode') {
  * @returns {Promise<string>} The model's text response
  */
 async function invokeModel(prompt, modelId = null, options = {}) {
+    // Check if Knowledge Base should be used
+    if (BEDROCK_CONFIG.useKnowledgeBase && BEDROCK_CONFIG.knowledgeBaseId) {
+        const mode = options.mode || 'chat-mode';
+        const gigsData = options.gigsData || [];
+        console.log('[Bedrock] Using Knowledge Base for mode:', mode);
+        return await invokeKnowledgeBase(prompt, mode, gigsData);
+    }
+    
+    // Fall back to direct model invocation
     try {
         const client = getBedrockClient();
         const model = modelId || BEDROCK_CONFIG.defaultModel;
-        
+
         // Get mode from options, default to 'chat-mode'
         const mode = options.mode || 'chat-mode';
         
@@ -247,12 +522,12 @@ async function invokeModel(prompt, modelId = null, options = {}) {
         // Build enhanced prompt with mode-specific instructions and gigs data
         const enhancedPrompt = buildPromptWithMode(prompt, mode, gigsData);
 
-        // Default parameters - adjust for smart-search mode
-        // For chat-mode, use low max tokens for ultra-concise responses (60 tokens = ~40 words for Claude)
+        // Default parameters - optimized for accuracy and conciseness
+        // For chat-mode: very low temperature and tokens for ultra-concise responses (40 tokens = ~20 words)
         const params = {
-            max_gen_len: options.maxTokens || (mode === 'smart-search' ? 256 : 60),
-            temperature: options.temperature !== undefined ? options.temperature : (mode === 'smart-search' ? 0.3 : 0.3),
-            top_p: options.topP !== undefined ? options.topP : 0.9
+            max_gen_len: options.maxTokens || (mode === 'smart-search' ? 256 : 40), // Reduced to 40 tokens for 20 words
+            temperature: options.temperature !== undefined ? options.temperature : (mode === 'smart-search' ? 0.3 : 0.05), // Very low temp = more accurate
+            top_p: options.topP !== undefined ? options.topP : (mode === 'smart-search' ? 0.9 : 0.7) // Lower for more focused responses
         };
 
         // Prepare the request body based on model family
@@ -335,8 +610,45 @@ async function invokeModel(prompt, modelId = null, options = {}) {
         // Clean the response to remove user's question
         let cleanedText = cleanResponse(text.trim(), userPrompt, mode);
         
-        // For chat-mode, enforce 50-word limit, remove platform mentions, and validate gig names
+        // For chat-mode, enforce 20-word limit, remove platform mentions, and validate gig names
         if (mode === 'chat-mode') {
+            const responseLower = cleanedText.toLowerCase();
+            
+            // Extract valid gig names for validation (from earlier in the function)
+            const validGigNames = gigsData.map(gig => (gig.gig_name || '').toLowerCase().trim()).filter(name => name);
+            
+            // Check if response contains ANY valid gig name
+            const hasValidGig = validGigNames.length > 0 && validGigNames.some(gigName => responseLower.includes(gigName));
+            const isNoMatchMessage = /no\s+(matching\s+)?gigs?/i.test(responseLower);
+            
+            // CRITICAL: If response doesn't contain valid gigs AND isn't a "no match" message, reject it
+            if (!hasValidGig && !isNoMatchMessage) {
+                console.warn('[Bedrock] Response does not contain valid gig names - rejecting');
+                cleanedText = "chatbot-response: No matching gigs found";
+            }
+            
+            // Check for completely unrelated topics (temples, religion, job interviews, clothing, etc.)
+            const unrelatedTopics = [
+                'temple', 'deity', 'brahma', 'vishnu', 'shiva', 'hindu', 'pilgrim', 'devotee',
+                'puja', 'ritual', 'shrine', 'gopuram', 'darshan', 'pushkarini', 'chola',
+                'sculpture', 'carving', 'architecture', 'spirituality', 'religion', 'worship',
+                'self-care', 'mindfulness', 'meditation', 'yoga', 'wellness', 'book', 'organization',
+                'namaste', 'routine', 'technique', 'practice', 'insight', 'experience', 'thought',
+                'job interview', 'interview', 'clothing', 'outfit', 'dress', 'wear', 'blazer',
+                'jeans', 'skirt', 'shirt', 'shoes', 'jewelry', 'makeup', 'hair', 'professional',
+                'business casual', 'marketing role', 'tech company', 'company culture', 'formal',
+                'casual environment', 'personality', 'style', 'impression', 'confident', 'prepared',
+                'help you', 'happy to help', 'glad i could', 'welcome', 'good luck', 'hope you get'
+            ];
+            
+            const hasUnrelatedTopic = unrelatedTopics.some(topic => responseLower.includes(topic));
+            
+            // If response contains unrelated topics, reject immediately (even if it has gigs, it's probably wrong)
+            if (hasUnrelatedTopic) {
+                console.warn('[Bedrock] Response contained unrelated topics - rejecting');
+                cleanedText = "chatbot-response: No matching gigs found";
+            }
+            
             // Check if response contains forbidden platform names - if so, reject it
             const forbiddenPlatforms = [
                 'fiverr', 'fiver', 'upwork', 'freelancer', 'taskrabbit', 'uber', 'lyft',
@@ -345,7 +657,6 @@ async function invokeModel(prompt, modelId = null, options = {}) {
                 'airbnb', 'booking.com', 'care.com', 'angie', 'craigslist', 'gumtree'
             ];
             
-            const responseLower = cleanedText.toLowerCase();
             const containsForbiddenPlatform = forbiddenPlatforms.some(platform => 
                 responseLower.includes(platform)
             );
@@ -353,7 +664,7 @@ async function invokeModel(prompt, modelId = null, options = {}) {
             // If response mentions forbidden platforms, replace with error message
             if (containsForbiddenPlatform) {
                 console.warn('[Bedrock] Response contained forbidden platform mention - rejecting');
-                cleanedText = "No matching gigs found";
+                cleanedText = "chatbot-response: No matching gigs found";
             } else {
                 // Also check for phrases like "According to Fiverr", "On Fiverr", etc.
                 const platformPhrases = [
@@ -407,7 +718,7 @@ async function invokeModel(prompt, modelId = null, options = {}) {
                 }).join('. ').trim();
             }
             
-            // Validate that only actual gig names from database are mentioned
+            // STRICT VALIDATION: Only keep lines that contain valid gig names or "no matching gigs"
             if (validGigNames.length > 0) {
                 const lines = cleanedText.split('\n');
                 const validLines = [];
@@ -418,31 +729,39 @@ async function invokeModel(prompt, modelId = null, options = {}) {
                     const containsValidGig = validGigNames.some(gigName => lineLower.includes(gigName));
                     // Check if line is just "no matching gigs" or similar
                     const isNoMatchMessage = /no\s+(matching\s+)?gigs?/i.test(lineLower);
+                    // Check if line is just the prefix "chatbot-response:"
+                    const isJustPrefix = /^chatbot-response:\s*$/i.test(lineLower);
                     
-                    if (containsValidGig || isNoMatchMessage) {
+                    // Only keep lines with valid gigs, no-match message, or just the prefix
+                    if (containsValidGig || isNoMatchMessage || isJustPrefix) {
                         validLines.push(line);
                     }
                 }
                 
-                // If we filtered out everything and there are valid gigs, return no match message
-                if (validLines.length === 0 && cleanedText.toLowerCase().includes('no')) {
-                    cleanedText = "No matching gigs found";
-                } else if (validLines.length === 0) {
-                    // If response doesn't contain valid gigs, replace with no match
-                    cleanedText = "No matching gigs found";
+                // If we filtered out everything, replace with no match message
+                if (validLines.length === 0 || (validLines.length === 1 && /^chatbot-response:\s*$/i.test(validLines[0]))) {
+                    cleanedText = "chatbot-response: No matching gigs found";
                 } else {
                     cleanedText = validLines.join('\n');
                 }
+            } else {
+                // If no valid gig names available, just return no match
+                cleanedText = "chatbot-response: No matching gigs found";
             }
             
             // Clean up extra spaces and punctuation
             cleanedText = cleanedText.replace(/\s+/g, ' ').replace(/\s*,\s*,/g, ',').trim();
             
-            // Enforce 40-word limit (ultra-concise)
+            // Enforce 20-word limit (ultra-concise)
             const words = cleanedText.split(/\s+/);
-            if (words.length > 40) {
-                // Truncate to 40 words
-                cleanedText = words.slice(0, 40).join(' ');
+            if (words.length > 20) {
+                // Truncate to 20 words
+                cleanedText = words.slice(0, 20).join(' ');
+            }
+            
+            // Ensure response starts with "chatbot-response: " if it doesn't already
+            if (!cleanedText.toLowerCase().startsWith('chatbot-response:')) {
+                cleanedText = 'chatbot-response: ' + cleanedText;
             }
         }
         

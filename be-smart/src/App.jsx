@@ -23,7 +23,7 @@ function App() {
           <Route path="/your-profile" element={<ProfilePage />} />
 
           {/* example of using our protected routes */}
-          <Route path="/test" element={<ProtectedRoute><DeleteME/></ProtectedRoute>}/>
+          <Route path="/test" element={<DeleteME/>}/>
 
 
 

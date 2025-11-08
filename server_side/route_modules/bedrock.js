@@ -70,6 +70,45 @@ router.post("/search", async (req, res) => {
             // Continue without gigs data if database query fails
         }
 
+        // Check if prompt matches "what jobs are available" pattern - return formatted gigs directly
+        const promptLower = prompt.toLowerCase().trim();
+        const jobsAvailablePatterns = [
+            /what\s+(jobs?|gigs?|work|opportunities?)\s+(are\s+)?(available|in|at)/i,
+            /(show|list|get|find|search)\s+(me\s+)?(all\s+)?(jobs?|gigs?|work|opportunities?)/i,
+            /(jobs?|gigs?|work|opportunities?)\s+(available|in|at)\s+greensboro/i,
+            /all\s+(jobs?|gigs?|work|opportunities?)/i
+        ];
+
+        const isJobsAvailableQuery = jobsAvailablePatterns.some(pattern => pattern.test(promptLower));
+        
+        if (isJobsAvailableQuery && selectedMode === 'chat-mode') {
+            console.log('[Bedrock] Detected "jobs available" query - returning formatted gigs list');
+            
+            // Format gigs for user display
+            let formattedResponse = 'chatbot-response: ';
+            
+            if (gigsData.length === 0) {
+                formattedResponse += 'No matching gigs found';
+            } else {
+                const gigsList = gigsData.map((gig, index) => {
+                    const name = gig.gig_name || 'N/A';
+                    const description = gig.gig_description || 'No description';
+                    const address = gig.gig_address || 'Address not specified';
+                    // Format: Name on first line, Description on second, Address on third
+                    return `${name}\nDescription: ${description}\nAddress: ${address}`;
+                }).join('\n\n');
+                
+                formattedResponse += gigsList;
+            }
+            
+            return res.json(RC_RESPONSE(RC_CODES.SUCCESS, {
+                response: formattedResponse,
+                prompt: prompt,
+                script: script || null,
+                mode: selectedMode
+            }));
+        }
+
         // Combine prompt and script if script is provided (for chat-mode context)
         let fullPrompt = prompt;
         if (script && typeof script === 'string' && script.trim().length > 0) {

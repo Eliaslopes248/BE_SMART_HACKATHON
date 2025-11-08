@@ -9,8 +9,10 @@ const express           = require("express");
 const router            = express.Router();
 const { OAuth2Client }  = require("google-auth-library");
 const jwt               = require('jsonwebtoken');
+const { randomUUID }    = require('crypto');
 const { RC_RESPONSE }   = require('../utils/endpoint_helpers.js');
 const { RC_CODES }      = require('../utils/error.js');
+const { query }         = require('./database.js');
 
 require("dotenv").config();
 
@@ -65,7 +67,7 @@ async function decodeToken(req, res, next){
 
 /**
  * checks users table to see if
- * user exists in the database
+ * user exists in the database, creates if not
  * @param {*} req 
  * @param {*} res 
  * @param {*} next 
@@ -78,17 +80,78 @@ async function userExists(req, res, next){
     }
 
     try{
+        const googleUser = req.user;
+        const email = googleUser.email;
 
-        //========================================
-        // MAKE REQUEST TO RDS TO FIND USER
-        //========================================
+        // Check if user exists by email
+        const existingUsers = await query(
+            'SELECT * FROM Users WHERE email = ?',
+            [email]
+        );
+
+        if (existingUsers && existingUsers.length > 0) {
+            // User exists, attach to request
+            const user = existingUsers[0];
+            req.user = {
+                uid: user.uid,
+                email: user.email,
+                fname: user.fname,
+                lname: user.lname,
+                username: user.username,
+                avatar_url: user.avatar_url || googleUser.picture,
+                googleId: googleUser.googleId,
+                fullName: googleUser.fullName,
+                firstName: googleUser.firstName,
+                lastName: googleUser.lastName,
+                picture: googleUser.picture
+            };
+            console.log('Google user found in database:', user.email);
+        } else {
+            // User doesn't exist, create new user
+            const uid = randomUUID();
+            const username = email.split('@')[0]; // Generate username from email
+            const fname = googleUser.firstName || 'User';
+            const lname = googleUser.lastName || '';
+            
+            // Insert new user (no password for Google auth users)
+            await query(
+                'INSERT INTO Users (uid, fname, lname, username, email, avatar_url, password, User_roles) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [uid, fname, lname, username, email, googleUser.picture || null, '', 'RESIDENT']
+            );
+
+            // Fetch the created user
+            const newUsers = await query(
+                'SELECT uid, fname, lname, username, email, avatar_url FROM Users WHERE uid = ?',
+                [uid]
+            );
+
+            if (newUsers && newUsers.length > 0) {
+                const user = newUsers[0];
+                req.user = {
+                    uid: user.uid,
+                    email: user.email,
+                    fname: user.fname,
+                    lname: user.lname,
+                    username: user.username,
+                    avatar_url: user.avatar_url,
+                    googleId: googleUser.googleId,
+                    fullName: googleUser.fullName,
+                    firstName: googleUser.firstName,
+                    lastName: googleUser.lastName,
+                    picture: googleUser.picture
+                };
+                console.log('Google user created in database:', user.email);
+            } else {
+                throw new Error('Failed to retrieve created user');
+            }
+        }
 
         // sends to next callback()
         next();
     }catch(error){
-        console.error("Error finding user in database:", error);
+        console.error("Error finding/creating user in database:", error);
         return res.json(RC_RESPONSE(RC_CODES.SERVER_ERROR, {
-            details: "Unexpected error during user lookup",
+            details: "Unexpected error during user lookup/creation",
             error: error.message
         }));
     }
@@ -101,19 +164,20 @@ async function userExists(req, res, next){
  * @param {*} token 
  * @returns custom JWT for user
  */
-function createJwtForUser(googlePayload){
-    if (!googlePayload)
+function createJwtForUser(userPayload){
+    if (!userPayload)
         return null;
 
-    // create json token
+    // create json token with user data from database
     const userData = {
-        googleId:       googlePayload.googleId,
-        email:          googlePayload.email,
-        name:           googlePayload.name,
-        first_name:     googlePayload.firstName,
-        lastName:       googlePayload.lastName,
-        picture:        googlePayload.picture,
-      };
+        uid:            userPayload.uid,
+        email:          userPayload.email,
+        fname:          userPayload.fname,
+        lname:          userPayload.lname,
+        username:       userPayload.username,
+        avatar_url:     userPayload.avatar_url,
+        googleId:       userPayload.googleId || null,
+    };
 
     const secret = process.env.JWT_SECRET || "development_secret";
     console.log("Using JWT secret:", secret);
