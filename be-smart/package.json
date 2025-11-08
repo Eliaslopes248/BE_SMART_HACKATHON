@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@arcgis/core": "^4.34.7",
     "@supabase/supabase-js": "^2.80.0",
     "@tailwindcss/vite": "^4.1.17",
     "bcrypt": "^6.0.0",
