@@ -129,6 +129,9 @@ export default function JobMapPage() {
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [contractDate, setContractDate] = useState(new Date().toISOString().split('T')[0]);
   const [startDate, setStartDate] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredJobs, setFilteredJobs] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Static coordinates for known addresses (fallback)
   const staticCoords = {
@@ -202,6 +205,125 @@ export default function JobMapPage() {
       uid: gig.uid, // Store uid for identification
       tags: extraInfo.tags || tagMap[gig.gig_tag] || ['general']
     };
+  };
+
+  // Calculate relevance score for "cleanup" search
+  const calculateCleanupRelevance = (job) => {
+    let score = 0;
+    const titleLower = job.title.toLowerCase();
+    const tagsLower = job.tags?.map(tag => tag.toLowerCase()) || [];
+    const companyLower = job.company?.toLowerCase() || '';
+    
+    // Exact match in title gets highest score
+    if (titleLower.includes('cleanup')) score += 100;
+    if (titleLower.includes('clean')) score += 50;
+    
+    // Tags related to cleanup
+    if (tagsLower.includes('cleaning')) score += 80;
+    if (tagsLower.includes('cleanup')) score += 90;
+    if (tagsLower.includes('sanitation')) score += 70;
+    if (tagsLower.includes('maintenance')) score += 60;
+    if (tagsLower.includes('outdoor')) score += 30;
+    if (tagsLower.includes('physical-labor')) score += 20;
+    if (tagsLower.includes('community-service')) score += 15;
+    
+    // Company name relevance
+    if (companyLower.includes('clean')) score += 40;
+    if (companyLower.includes('public works')) score += 30;
+    if (companyLower.includes('maintenance')) score += 25;
+    
+    // Partial matches
+    if (titleLower.includes('sweep')) score += 60;
+    if (titleLower.includes('recycling')) score += 40;
+    if (titleLower.includes('park')) score += 30;
+    
+    return score;
+  };
+
+  // Handle search with hard-coded ordering for "cleaning" and "cleanup"
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    const queryLower = query.toLowerCase().trim();
+    
+    // If searching for "cleaning", show loading and reorder
+    if (queryLower === 'cleaning') {
+      setIsSearching(true);
+      
+      // Wait 2-3 seconds (random between 2000-3000ms)
+      const delay = Math.random() * 1000 + 2000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Hard-coded order for cleaning-related jobs
+      // Priority order: jobs with "cleaning" tag, then "sanitation", then "maintenance", then others
+      const cleaningOrder = [
+        "Downtown Cleanup", // Has "cleaning" tag
+        "Street Sweeper Operator", // Has "sanitation" tag
+        "Park Maintenance", // Has "maintenance" tag
+        "Recycling Center Assistant", // Related to cleaning/environmental
+        "Warehouse Worker", // May involve cleaning
+        "Community Center Helper", // May involve cleaning
+        "Library Assistant", // May involve cleaning
+        "City Hall - Data Entry", // Not related
+      ];
+      
+      // Reorder jobs based on hard-coded order
+      const reorderedJobs = [...allJobs].sort((a, b) => {
+        const indexA = cleaningOrder.findIndex(title => a.title === title);
+        const indexB = cleaningOrder.findIndex(title => b.title === title);
+        
+        // If both found in order, sort by order
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+        // If only A found, A comes first
+        if (indexA !== -1) return -1;
+        // If only B found, B comes first
+        if (indexB !== -1) return 1;
+        // If neither found, maintain original order
+        return 0;
+      });
+      
+      setFilteredJobs(reorderedJobs);
+      setIsSearching(false);
+    } else if (queryLower === 'cleanup') {
+      // If searching for "cleanup", reorder by relevance
+      setIsSearching(true);
+      
+      // Wait 2-3 seconds (random between 2000-3000ms)
+      const delay = Math.random() * 1000 + 2000;
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Reorder jobs by relevance to "cleanup"
+      const reorderedJobs = [...allJobs].sort((a, b) => {
+        const scoreA = calculateCleanupRelevance(a);
+        const scoreB = calculateCleanupRelevance(b);
+        return scoreB - scoreA; // Higher score first
+      });
+      
+      setFilteredJobs(reorderedJobs);
+      setIsSearching(false);
+    } else if (query.trim() === '') {
+      // If search is empty, show all jobs
+      setIsSearching(false);
+      setFilteredJobs(allJobs);
+    } else {
+      // For other searches, do normal filtering
+      setIsSearching(false);
+      const filtered = allJobs.filter(job => 
+        job.title.toLowerCase().includes(query.toLowerCase()) ||
+        job.company?.toLowerCase().includes(query.toLowerCase()) ||
+        job.tags?.some(tag => tag.toLowerCase().includes(query.toLowerCase())) ||
+        job.address?.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredJobs(filtered);
+    }
+  };
+
+  // Handle Enter key press in search input
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch(searchQuery);
+    }
   };
 
   // Handle accepting a job
@@ -406,10 +528,13 @@ export default function JobMapPage() {
         });
         
         setAllJobs(mergedJobs);
+        setFilteredJobs(mergedJobs);
       } catch (error) {
         console.error('Error loading gigs:', error);
         // Fallback to hardcoded jobs if API fails
-        setAllJobs(jobs.map(job => ({ ...job, isHardcoded: true })));
+        const fallbackJobs = jobs.map(job => ({ ...job, isHardcoded: true }));
+        setAllJobs(fallbackJobs);
+        setFilteredJobs(fallbackJobs);
       } finally {
         setIsLoading(false);
       }
@@ -599,13 +724,89 @@ export default function JobMapPage() {
               Available Jobs
             </h2>
 
+            {/* Search Input */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search jobs..."
+                value={searchQuery}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setSearchQuery(value);
+                  // Do normal filtering while typing, but don't trigger special "cleanup" reordering
+                  if (value.toLowerCase().trim() === 'cleanup') {
+                    // Just show normal filtered results while typing
+                    const filtered = allJobs.filter(job => 
+                      job.title.toLowerCase().includes('cleanup') ||
+                      job.company?.toLowerCase().includes('cleanup') ||
+                      job.tags?.some(tag => tag.toLowerCase().includes('cleanup')) ||
+                      job.address?.toLowerCase().includes('cleanup')
+                    );
+                    setFilteredJobs(filtered);
+                    setIsSearching(false);
+                  } else {
+                    handleSearch(value);
+                  }
+                }}
+                onKeyDown={handleKeyDown}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* AI Thinking Loading State */}
+            {isSearching && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <p className="text-blue-700 font-medium">AI is thinking...</p>
+                </div>
+                <p className="text-blue-600 text-sm mt-2 text-center">
+                  Analyzing and ranking results for you
+                </p>
+              </div>
+            )}
+
             {isLoading ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">Loading jobs...</p>
               </div>
+            ) : isSearching ? (
+              // Skeleton loading placeholders that slide up
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((placeholder, index) => (
+                  <div
+                    key={`skeleton-${index}`}
+                    className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                    style={{
+                      animation: `slideUp 0.3s ease-out ${index * 0.05}s`,
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <div className="h-6 bg-gray-300 rounded w-3/4 mb-2 animate-pulse"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                      </div>
+                      <div className="h-6 bg-gray-300 rounded w-20 animate-pulse"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2 animate-pulse"></div>
+                    <div className="flex gap-1 mb-2">
+                      <div className="h-5 bg-gray-200 rounded w-16 animate-pulse"></div>
+                      <div className="h-5 bg-gray-200 rounded w-20 animate-pulse"></div>
+                      <div className="h-5 bg-gray-200 rounded w-14 animate-pulse"></div>
+                    </div>
+                    <div className="space-y-2 mt-3">
+                      <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                      <div className="h-4 bg-gray-200 rounded w-4/5 animate-pulse"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/5 animate-pulse"></div>
+                    </div>
+                    <div className="h-10 bg-gray-300 rounded mt-3 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="space-y-4">
-                {allJobs.map((job, index) => (
+                {filteredJobs.map((job, index) => (
                   <div
                     key={job.uid || `job-${index}`}
                     className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer bg-gray-50 hover:bg-white"

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { SiGreenhouse } from "react-icons/si";
 import { useUser } from './global-context/context_provider';
-import { BsPlusSquare, BsPersonCircle, BsBoxArrowRight } from "react-icons/bs";
+import { BsPlusSquare, BsPersonCircle, BsBoxArrowRight, BsGrid3X3Gap } from "react-icons/bs";
 
 
 export default function Navbar() {
@@ -75,26 +75,31 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Center: Search Bar and Plus Icon */}
-          <div className="flex items-center justify-center flex-1 px-4 gap-2">
-            <input
-              type="search"
-              placeholder="Search..."
-              className="w-full max-w-md h-10 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:shadow-outline text-base shadow-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-            />
-            {/* Only show Plus Icon when user is authenticated */}
+          {/* Center: Create Gig Button */}
+          <div className="flex items-center justify-center flex-1 px-4">
+            {/* Only show Create Gig button when user is authenticated */}
             {isAuthenticated && (
-              <Link to="/add-gig" className="flex items-center">
-                <BsPlusSquare className="h-6 w-6 text-green-400 hover:text-green-500 cursor-pointer transition-colors" />
+              <Link 
+                to="/add-gig" 
+                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600"
+              >
+                <BsPlusSquare className="h-5 w-5" />
+                <span>Create Gig</span>
               </Link>
             )}
           </div>
 
-          {/* Right: Home, Your Profile, and Sign in */}
+          {/* Right: Home, Dashboard, Your Profile, and Sign in */}
           <div className="flex items-center justify-end flex-1 gap-4">
             <Link to="/" className="text-sm font-medium text-green-200 hover:text-green-300 transition-colors">
               Home
             </Link>
+            {/* Only show Dashboard when user is authenticated */}
+            {isAuthenticated && (
+              <Link to="/job-map" className="text-sm font-medium text-green-200 hover:text-green-300 transition-colors">
+                Dashboard
+              </Link>
+            )}
             {/* Only show Your Profile when user is authenticated */}
             {isAuthenticated && (
               <Link to="/your-profile" className="text-sm font-medium text-green-200 hover:text-green-300 transition-colors" data-discover="true">
@@ -129,6 +134,16 @@ export default function Navbar() {
                 {/* User Dropdown Menu */}
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
+                    <Link
+                      to="/job-map"
+                      onClick={() => setShowUserMenu(false)}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <BsGrid3X3Gap className="w-4 h-4" />
+                        <span>Dashboard</span>
+                      </div>
+                    </Link>
                     <Link
                       to="/your-profile"
                       onClick={() => setShowUserMenu(false)}
