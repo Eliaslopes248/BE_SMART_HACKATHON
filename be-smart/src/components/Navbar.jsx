@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { SiGreenhouse } from "react-icons/si";
 import { useUser } from './global-context/context_provider';
+import { BsPlusSquare, BsPersonCircle } from "react-icons/bs";
+
 
 export default function Navbar() {
   // Get user authentication state
@@ -45,31 +47,59 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Center: Nav links */}
-          <div className="flex items-center justify-center flex-1 gap-10">
-            {/* Only show Your Profile when user is authenticated */}
+          {/* Center: Search Bar and Plus Icon */}
+          <div className="flex items-center justify-center flex-1 px-4 gap-2">
+            <input
+              type="search"
+              placeholder="Search..."
+              className="w-full max-w-md h-10 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:shadow-outline text-base shadow-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+            />
+            {/* Only show Plus Icon when user is authenticated */}
             {isAuthenticated && (
-              <div className="hidden md:flex items-center gap-6">
-                <Link to="/your-profile" className="text-sm font-medium text-green-200">Your Profile</Link>
-              </div>
+              <Link to="/add-gig" className="flex items-center">
+                <BsPlusSquare className="h-6 w-6 text-green-400 hover:text-green-500 cursor-pointer transition-colors" />
+              </Link>
             )}
           </div>
 
-          {/* Right: Home and Sign in */}
+          {/* Right: Home, Your Profile, and Sign in */}
           <div className="flex items-center justify-end flex-1 gap-4">
             <Link to="/" className="text-sm font-medium text-green-200 hover:text-green-300 transition-colors">
               Home
             </Link>
-            <Link
-              to="/login"
-              className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600"
-            >
-              Sign In
-            </Link>
+            {/* Only show Your Profile when user is authenticated */}
+            {isAuthenticated && (
+              <Link to="/your-profile" className="text-sm font-medium text-green-200 hover:text-green-300 transition-colors" data-discover="true">
+                Your Profile
+              </Link>
+            )}
+            {!isAuthenticated ? (
+              <Link
+                to="/login"
+                className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors dark:bg-green-500 dark:hover:bg-green-600"
+              >
+                Sign In
+              </Link>
+            ) : (
+              <Link
+                to="/your-profile"
+                className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                title="Your Profile"
+              >
+                {user?.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt="User avatar"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-green-400"
+                  />
+                ) : (
+                  <BsPersonCircle className="w-10 h-10 text-green-400 hover:text-green-500 transition-colors" />
+                )}
+              </Link>
+            )}
           </div>
         </div>
       </nav>
     </header>
   );
 }
-

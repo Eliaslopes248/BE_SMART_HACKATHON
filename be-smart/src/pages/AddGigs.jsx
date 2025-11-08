@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Chatbot from '../components/chatbot/chatbot';
 
 export default function AddGigs() {
   const [formData, setFormData] = useState({
@@ -387,6 +388,7 @@ export default function AddGigs() {
         </div>
       </div>
       <Footer />
+      <Chatbot />
     </>
   );
 }

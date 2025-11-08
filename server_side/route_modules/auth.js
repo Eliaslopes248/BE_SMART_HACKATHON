@@ -294,9 +294,28 @@ router.post("/basic/register", authorizeRegistration, async (req, res) => {
             }));
         }
 
+        // Handle database connection errors
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+            return res.json(RC_RESPONSE(RC_CODES.SERVER_ERROR, {
+                details: 'Database connection failed. The database may be unreachable from this network.',
+                error: error.message,
+                code: error.code
+            }));
+        }
+
+        // Handle database authentication errors
+        if (error.code === 'ER_ACCESS_DENIED_ERROR') {
+            return res.json(RC_RESPONSE(RC_CODES.SERVER_ERROR, {
+                details: 'Database authentication failed. Please check database credentials.',
+                error: error.message,
+                code: error.code
+            }));
+        }
+
         return res.json(RC_RESPONSE(RC_CODES.SERVER_ERROR, {
             details: 'Registration failed',
-            error: error.message
+            error: error.message,
+            code: error.code || 'UNKNOWN_ERROR'
         }));
     }
 });

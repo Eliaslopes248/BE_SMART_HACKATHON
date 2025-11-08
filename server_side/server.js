@@ -96,6 +96,21 @@ app.use("/api/bedrock", bedrockEndpoints);
 // files routes
 app.use("/api/files", filesEndpoints);
 
+// database health check route
+app.get("/api/health/database", async (req, res) => {
+    try {
+        const { healthCheck } = require("./wrappers/database.js");
+        const health = await healthCheck();
+        res.json(health);
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            connected: false,
+            error: error.message
+        });
+    }
+});
+
 // access react build from dist folder
 const BUILD_PATH   = path.join(__dirname, "../be-smart/dist");
 

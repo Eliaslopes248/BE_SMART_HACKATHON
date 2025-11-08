@@ -5,6 +5,7 @@ import { SiGreenhouse } from "react-icons/si";
 import GoogleAuthButton from "../components/auth/GoogleAuthButton";
 import { invokeBasicRegister } from "../middlewares/auth.js";
 import { useUser } from "../components/global-context/context_provider.jsx";
+import Chatbot from "../components/chatbot/chatbot";
 
 export default function CreateAccount() {
   const [password, setPassword] = useState("");
@@ -269,6 +270,7 @@ export default function CreateAccount() {
           </p>
         </div>
       </div>
+      <Chatbot />
     </>
   );
 }

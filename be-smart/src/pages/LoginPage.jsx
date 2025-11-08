@@ -5,6 +5,7 @@ import { SiGreenhouse } from "react-icons/si";
 import GoogleAuthButton from "../components/auth/GoogleAuthButton";
 import { invokeBasicLogin } from "../middlewares/auth.js";
 import { useUser } from "../components/global-context/context_provider.jsx";
+import Chatbot from "../components/chatbot/chatbot";
 
 export default function LoginPage() {
   const [error, setError] = useState("");
@@ -181,6 +182,7 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+      <Chatbot />
     </>
   );
 }

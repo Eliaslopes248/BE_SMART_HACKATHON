@@ -10,12 +10,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@arcgis/core": "^4.34.7",
     "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.80.0",
     "@tailwindcss/vite": "^4.1.17",
     "bcrypt": "^6.0.0",
     "google-one-tap": "^1.0.6",
     "jwt-decode": "^4.0.0",
+    "mapbox-gl": "^3.16.0",
     "motion": "^12.23.24",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
