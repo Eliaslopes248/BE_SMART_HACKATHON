@@ -74,11 +74,76 @@ async function checkCache(key){
     }
 }
 
+/**
+ * Check if Redis is running and connected
+ * @returns {Promise<boolean>} True if Redis is running, false otherwise
+ */
+async function isRedisRunning(){
+    try {
+        // Check if client is connected
+        if (!redisClient.isReady) {
+            return false;
+        }
+        
+        // Try to ping Redis
+        await redisClient.ping();
+        return true;
+    } catch (error) {
+        console.error("Redis is not running or not connected:", error.message);
+        return false;
+    }
+}
 
+/**
+ * Delete a key from Redis cache
+ * @param {string} key - Key to delete
+ * @returns {Promise<boolean>} True if deleted successfully, false otherwise
+ */
+async function deleteCache(key){
+    if (!key)
+        return false;
+
+    try {
+        await redisClient.del(key);
+        return true;
+    } catch (error) {
+        console.error("Error when trying to delete cache:", error);
+        return false;
+    }
+}
+
+/**
+ * Delete multiple keys from Redis cache (supports pattern matching)
+ * @param {string} pattern - Pattern to match keys (e.g., "gig:*")
+ * @returns {Promise<number>} Number of keys deleted
+ */
+async function deleteCachePattern(pattern){
+    if (!pattern)
+        return 0;
+
+    try {
+        // Get all keys matching the pattern
+        const keys = await redisClient.keys(pattern);
+        
+        if (keys.length === 0) {
+            return 0;
+        }
+
+        // Delete all matching keys
+        await redisClient.del(keys);
+        return keys.length;
+    } catch (error) {
+        console.error("Error when trying to delete cache pattern:", error);
+        return 0;
+    }
+}
 
 // utils export
 module.exports = {
     redisClient,
     cacheData,
-    checkCache
+    checkCache,
+    isRedisRunning,
+    deleteCache,
+    deleteCachePattern
 }

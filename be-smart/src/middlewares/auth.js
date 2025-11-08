@@ -43,7 +43,7 @@ async function invokeGoogleAuth(jwt) {
  * @returns user session
  */
 async function invokeBasicLogin(userData) {
-    if (!userData) return null;
+    if (!userData) return { success: false, error: "User data is required" };
 
     try {
         // send auth request to server
@@ -52,21 +52,31 @@ async function invokeBasicLogin(userData) {
         // check for status
         if (response.status != 200){
             console.error("Unable to make request:", response);
-            return null;
+            // Return error details from response
+            return { 
+                success: false, 
+                error: response.details || "Login failed. Please try again." 
+            };
         }
      
         // handle success
         if (response.status == 200){
             // sends back to jsx file I assume to be setUser context
-            return response.userSession;
+            return { success: true, userSession: response.userSession };
         }else{
             console.error("Unable to log user in:", response);
-            return null;
+            return { 
+                success: false, 
+                error: response.details || "Login failed. Please try again." 
+            };
         }
         
     } catch (error) {
         console.error("Error when trying to invoke login request:", error);
-        return null;
+        return { 
+            success: false, 
+            error: error.message || "An error occurred during login. Please try again." 
+        };
     }
     
 }
@@ -78,7 +88,7 @@ async function invokeBasicLogin(userData) {
  * @returns user session
  */
 async function invokeBasicRegister(userData) {
-    if (!userData) return null;
+    if (!userData) return { success: false, error: "User data is required" };
 
     try {
         // send auth request to server
@@ -87,21 +97,37 @@ async function invokeBasicRegister(userData) {
         // check for status
         if (response.status != 200){
             console.error("Unable to make request:", response);
-            return null;
+            // Return error details from response
+            return { 
+                success: false, 
+                error: response.details || "Registration failed. Please try again." 
+            };
         }
      
         // handle success
         if (response.status == 200){
             // sends back to jsx file I assume to be setUser context
             console.log("Result:", response.userSession);
-            return response.userSession;
+            return { success: true, userSession: response.userSession };
         }else{
             console.error("Unable to register user:", response);
-            return null;
+            return { 
+                success: false, 
+                error: response.details || "Registration failed. Please try again." 
+            };
         }
         
     } catch (error) {
         console.error("Error when trying to invoke register request:", error);
-        return null;
+        return { 
+            success: false, 
+            error: error.message || "An error occurred during registration. Please try again." 
+        };
     }
 }
+
+export {
+    invokeGoogleAuth,
+    invokeBasicLogin,
+    invokeBasicRegister
+};
