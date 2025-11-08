@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import Chatbot from '../components/chatbot/chatbot';
+import { addGig } from '../middlewares/gigs';
+import { useUser } from '../components/global-context/context_provider';
 
 export default function AddGigs() {
+  const navigate = useNavigate();
+  const { user } = useUser();
   const [formData, setFormData] = useState({
     gigName: '',
     category: '',
@@ -18,9 +22,16 @@ export default function AddGigs() {
     availability: '',
     startDate: '',
     endDate: '',
+    contactPerson: '',
+    contactTitle: '',
+    contactPhone: '',
+    contactEmail: '',
   });
 
   const [images, setImages] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,10 +56,139 @@ export default function AddGigs() {
     setImages(prev => [...prev, ...files]);
   };
 
-  const handleSubmit = (e, action) => {
+  // Map category to gig_tag
+  const mapCategoryToTag = (category) => {
+    const categoryMap = {
+      'tech': 'INFRASTRUCTURE',
+      'construction': 'INFRASTRUCTURE',
+      'retail': 'HOSPITALITY',
+      'hospitality': 'HOSPITALITY',
+      'education': 'VOLUNTEERING',
+      'other': 'VOLUNTEERING'
+    };
+    return categoryMap[category] || 'VOLUNTEERING';
+  };
+
+  // Map availability to urgency
+  const mapAvailabilityToUrgency = (availability) => {
+    const urgencyMap = {
+      'available': 'LOW',
+      'limited': 'MEDIUM',
+      'unavailable': 'HIGH'
+    };
+    return urgencyMap[availability] || 'LOW';
+  };
+
+  const handleSubmit = async (e, action) => {
     e.preventDefault();
-    console.log(`${action}:`, { ...formData, images });
-    // TODO: Handle form submission
+    setError('');
+    setSuccess(false);
+
+    // Validate required fields
+    if (!formData.gigName || !formData.location || !formData.category) {
+      setError('Please fill in all required fields (Gig Name, Location, Category)');
+      return;
+    }
+
+    // Check if user is logged in
+    if (!user || !user.uid) {
+      setError('Please log in to create a gig');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare gig data for API
+      const gigData = {
+        gig_owner: user.uid,
+        gig_name: formData.gigName,
+        gig_address: formData.location,
+        paid: !!formData.payRate && parseFloat(formData.payRate) > 0,
+        gig_description: formData.description || 'No description provided',
+        gig_tag: mapCategoryToTag(formData.category),
+        gig_urgency: mapAvailabilityToUrgency(formData.availability),
+      };
+
+      // Generate tags based on category and other fields
+      const generateTags = () => {
+        const tags = [];
+        const categoryTags = {
+          'tech': ['technology', 'computer', 'software', 'IT'],
+          'construction': ['construction', 'building', 'physical-labor', 'skilled-trade'],
+          'retail': ['retail', 'customer-service', 'sales', 'commerce'],
+          'hospitality': ['hospitality', 'customer-service', 'service-industry', 'tourism'],
+          'education': ['education', 'teaching', 'learning', 'academic'],
+          'other': ['general', 'miscellaneous']
+        };
+        
+        tags.push(...(categoryTags[formData.category] || ['general']));
+        
+        if (formData.gigType) {
+          tags.push(formData.gigType.toLowerCase().replace('-', '-'));
+        }
+        
+        // Add experience level based on availability
+        if (formData.availability === 'available') {
+          tags.push('entry-level');
+        } else if (formData.availability === 'limited') {
+          tags.push('mid-level');
+        }
+        
+        return tags;
+      };
+
+      // Store additional info in localStorage for JobMapPage
+      const additionalInfo = {
+        company: formData.company || 'Not specified',
+        payRate: formData.payRate ? `$${formData.payRate}/hour` : 'Not specified',
+        payType: 'hourly',
+        contactPerson: formData.contactPerson || 'Contact information not provided',
+        contactTitle: formData.contactTitle || '',
+        contactPhone: formData.contactPhone || 'N/A',
+        contactEmail: formData.contactEmail || 'N/A',
+        gigName: formData.gigName,
+        address: formData.location,
+        tags: generateTags(),
+        hoursPerWeek: formData.duration ? parseInt(formData.duration) : null,
+        startDate: formData.startDate || null,
+        endDate: formData.endDate || null,
+        requirements: formData.description ? [formData.description] : [],
+        description: formData.description || 'No description provided',
+        experienceLevel: formData.availability === 'available' ? 'entry-level' : 
+                        formData.availability === 'limited' ? 'mid-level' : 'entry-level',
+        workType: formData.gigType || 'part-time'
+      };
+
+      if (action === 'publish') {
+        // Submit to API
+        const result = await addGig(gigData);
+        
+        if (result) {
+          // Store additional info with the gig UID as key
+          localStorage.setItem(`gig_${result.uid}`, JSON.stringify(additionalInfo));
+          
+          setSuccess(true);
+          // Redirect to job map after 1.5 seconds
+          setTimeout(() => {
+            navigate('/job-map');
+          }, 1500);
+        } else {
+          setError('Failed to create gig. Please try again.');
+        }
+      } else {
+        // Draft - save to localStorage
+        const draftKey = `gig_draft_${Date.now()}`;
+        localStorage.setItem(draftKey, JSON.stringify({ ...gigData, ...additionalInfo }));
+        setSuccess(true);
+        alert('Draft saved!');
+      }
+    } catch (err) {
+      console.error('Error submitting gig:', err);
+      setError('An error occurred while creating the gig. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,7 +217,7 @@ export default function AddGigs() {
                 {/* Gig Name */}
                 <div>
                   <label htmlFor="gigName" className="block text-sm font-medium text-gray-700 mb-2">
-                    Gig Name
+                    Gig Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -86,6 +226,7 @@ export default function AddGigs() {
                     value={formData.gigName}
                     onChange={handleChange}
                     placeholder="Enter gig name"
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
@@ -93,13 +234,14 @@ export default function AddGigs() {
                 {/* Category */}
                 <div>
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-                    Category
+                    Category <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="category"
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">Select a category</option>
@@ -117,18 +259,15 @@ export default function AddGigs() {
                   <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
                     Company/Organization
                   </label>
-                  <select
+                  <input
+                    type="text"
                     id="company"
                     name="company"
                     value={formData.company}
                     onChange={handleChange}
+                    placeholder="Enter company or organization name"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  >
-                    <option value="">Select company</option>
-                    <option value="company1">Company 1</option>
-                    <option value="company2">Company 2</option>
-                    <option value="company3">Company 3</option>
-                  </select>
+                  />
                 </div>
 
                 {/* Gig Type */}
@@ -154,7 +293,7 @@ export default function AddGigs() {
                 {/* Location */}
                 <div>
                   <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
+                    Location (Address) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -162,7 +301,8 @@ export default function AddGigs() {
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
-                    placeholder="Enter location"
+                    placeholder="e.g., 123 Main St, Greensboro, NC"
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
                 </div>
@@ -186,7 +326,7 @@ export default function AddGigs() {
                 {/* Pay Rate */}
                 <div>
                   <label htmlFor="payRate" className="block text-sm font-medium text-gray-700 mb-2">
-                    Pay Rate ($)
+                    Pay Rate ($/hour)
                   </label>
                   <input
                     type="number"
@@ -194,9 +334,79 @@ export default function AddGigs() {
                     name="payRate"
                     value={formData.payRate}
                     onChange={handleChange}
-                    placeholder="Enter pay rate"
+                    placeholder="Enter pay rate per hour"
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   />
+                </div>
+              </div>
+
+              {/* Contact Information */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-md font-semibold text-gray-900 mb-4">Contact Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Contact Person */}
+                  <div>
+                    <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Person Name
+                    </label>
+                    <input
+                      type="text"
+                      id="contactPerson"
+                      name="contactPerson"
+                      value={formData.contactPerson}
+                      onChange={handleChange}
+                      placeholder="John Doe"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Contact Title */}
+                  <div>
+                    <label htmlFor="contactTitle" className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Title/Role
+                    </label>
+                    <input
+                      type="text"
+                      id="contactTitle"
+                      name="contactTitle"
+                      value={formData.contactTitle}
+                      onChange={handleChange}
+                      placeholder="HR Manager"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Contact Phone */}
+                  <div>
+                    <label htmlFor="contactPhone" className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      id="contactPhone"
+                      name="contactPhone"
+                      value={formData.contactPhone}
+                      onChange={handleChange}
+                      placeholder="(336) 123-4567"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Contact Email */}
+                  <div>
+                    <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                      Contact Email
+                    </label>
+                    <input
+                      type="email"
+                      id="contactEmail"
+                      name="contactEmail"
+                      value={formData.contactEmail}
+                      onChange={handleChange}
+                      placeholder="contact@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -368,20 +578,35 @@ export default function AddGigs() {
               )}
             </div>
 
+            {/* Error/Success Messages */}
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-800">Gig created successfully! Redirecting to job map...</p>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex justify-end gap-4">
               <button
                 type="button"
                 onClick={(e) => handleSubmit(e, 'draft')}
-                className="px-6 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-medium"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Draft
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Publish Gig
+                {isSubmitting ? 'Publishing...' : 'Publish Gig'}
               </button>
             </div>
           </form>
