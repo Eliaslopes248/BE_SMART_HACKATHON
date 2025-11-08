@@ -49,8 +49,10 @@ const allowedOrigins = [
     'http://localhost:8080', // nodejs dev server
     'http://localhost:5173', // Vite dev server
     'http://localhost:3000', // Local server
-    'http://ec2-52-15-61-144.us-east-2.compute.amazonaws.com:3000', // Production EC2
-    'http://52.15.61.144:3000', // Production IP
+    'http://ec2-3-16-159-211.us-east-2.compute.amazonaws.com:3000', // Production EC2 (new instance)
+    'http://3.16.159.211:3000', // Production IP (new instance)
+    'http://ec2-52-15-61-144.us-east-2.compute.amazonaws.com:3000', // Old Production EC2 (keep for backward compatibility)
+    'http://52.15.61.144:3000', // Old Production IP (keep for backward compatibility)
 ];
   
 app.use(cors({

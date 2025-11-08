@@ -102,7 +102,7 @@ DB_CONNECTION_LIMIT=20
 
 # Server Configuration
 PORT=3000
-BASE_URL=http://ec2-52-15-61-144.us-east-2.compute.amazonaws.com:3000
+BASE_URL=http://ec2-3-16-159-211.us-east-2.compute.amazonaws.com:3000
 EOF
 }
 
