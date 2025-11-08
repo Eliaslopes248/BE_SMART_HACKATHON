@@ -78,11 +78,11 @@ export default function PricingSection({ showNavAndFooter = true }) {
           />
         </div>
         <div className="mx-auto max-w-4xl text-center">
-          <p className="mt-2 text-5xl font-semibold tracking-tight text-balance bg-gradient-to-r from-green-400 via-green-200 to-green-600 bg-clip-text text-transparent leading-normal pb-1 sm:text-6xl">
+          <p className="mt-2 text-2xl font-semibold tracking-tight text-balance bg-gradient-to-r from-green-400 via-green-200 to-green-600 bg-clip-text text-transparent leading-normal pb-1 sm:text-6xl">
             Plans and Pricing
           </p>
         </div>
-        <p className="mx-auto mt-6 max-w-2xl text-center text-lg font-light text-pretty text-gray-400 sm:text-xl/8">
+        <p className="mx-auto mt-6 max-w-3xl text-center text-lg font-light text-pretty text-gray-400 sm:text-xl/8">
           Transparent pricing that keeps our platform accessible while ensuring quality service for everyone in the Greensboro community.
         </p>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 sm:mt-20 lg:grid-cols-3">
